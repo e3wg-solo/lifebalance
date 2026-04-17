@@ -9,33 +9,23 @@ import { useLifeBalanceStore } from "@/lib/store";
 
 export default function LoginPage() {
   const router = useRouter();
-  const login = useLifeBalanceStore((s) => s.login);
+  const { login } = useLifeBalanceStore();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
-      setError("");
-      if (!email.includes("@")) {
-        setError("Введите корректный email");
-        return;
-      }
-      if (password.length < 6) {
-        setError("Пароль должен быть от 6 символов");
-        return;
-      }
       setLoading(true);
-      // Mock auth — 600ms delay
-      await new Promise((r) => setTimeout(r, 600));
+      await new Promise((r) => setTimeout(r, 500));
       login(email);
-      router.push("/dashboard");
+      const onboarded = useLifeBalanceStore.getState().hasCompletedOnboarding;
+      router.push(onboarded ? "/dashboard" : "/onboarding");
     },
-    [email, password, login, router]
+    [email, login, router]
   );
 
   return (
@@ -179,23 +169,7 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Error */}
-            {error && (
-              <motion.p
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                style={{
-                  fontSize: "0.8125rem",
-                  color: "#D97070",
-                  background: "#FFF0F0",
-                  borderRadius: 8,
-                  padding: "8px 12px",
-                  maxWidth: "none",
-                }}
-              >
-                {error}
-              </motion.p>
-            )}
+
 
             {/* Submit */}
             <motion.button

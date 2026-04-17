@@ -86,7 +86,7 @@ export default function SettingsPage() {
                 width: 56,
                 height: 56,
                 borderRadius: 18,
-                background: "#C8DFC8",
+                background: "var(--health)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -154,12 +154,12 @@ export default function SettingsPage() {
                   gap: 6,
                   padding: "12px 8px",
                   borderRadius: 12,
-                  border: `2px solid ${theme === value ? "#7AAE7A" : "var(--border)"}`,
-                  background: theme === value ? "#EAF4EA" : "var(--surface)",
+                  border: `2px solid ${theme === value ? "var(--accent)" : "var(--border)"}`,
+                  background: theme === value ? "var(--chip-green-bg)" : "var(--surface)",
                   cursor: "pointer",
                   fontSize: "0.8125rem",
                   fontWeight: 600,
-                  color: theme === value ? "#7AAE7A" : "var(--text-secondary)",
+                  color: theme === value ? "var(--accent)" : "var(--text-secondary)",
                   transition: "all 0.2s",
                 }}
                 id={`theme-${value}`}
@@ -180,7 +180,7 @@ export default function SettingsPage() {
           style={{ padding: 20 }}
         >
           <SettingsRow
-            icon={<Bell size={18} weight={user.preferences?.notifications ? "fill" : "regular"} color="#6BAAD6" />}
+            icon={<Bell size={18} weight={user.preferences?.notifications ? "fill" : "regular"} color="var(--chip-blue-text)" />}
             label="Напоминания"
             description="Уведомление о новом цикле через 30 дней"
             right={
@@ -231,16 +231,16 @@ export default function SettingsPage() {
             Статистика
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-            <div style={{ background: "#EAF4EA", borderRadius: 12, padding: "12px 14px" }}>
-              <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "#7AAE7A", maxWidth: "none" }}>
+            <div style={{ background: "var(--chip-green-bg)", borderRadius: 12, padding: "12px 14px" }}>
+              <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--chip-green-text)", maxWidth: "none" }}>
                 {useLifeBalanceStore.getState().cycles.length}
               </p>
               <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 500, maxWidth: "none" }}>
                 Циклов
               </p>
             </div>
-            <div style={{ background: "#FFF5EB", borderRadius: 12, padding: "12px 14px" }}>
-              <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "#E09040", maxWidth: "none" }}>
+            <div style={{ background: "var(--chip-orange-bg)", borderRadius: 12, padding: "12px 14px" }}>
+              <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--chip-orange-text)", maxWidth: "none" }}>
                 {user.streakDays ?? 0}
               </p>
               <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 500, maxWidth: "none" }}>

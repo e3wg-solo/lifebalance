@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { useLifeBalanceStore } from "@/lib/store";
 import { SECTORS } from "@/lib/sectors";
@@ -25,22 +25,14 @@ export default function DashboardPage() {
     updateScore,
     initCycle,
     refreshInsights,
-    getTodayCheckin,
-    addCheckin,
   } = useLifeBalanceStore();
 
-  const [checkinMood, setCheckinMood] = useState<number | null>(null);
-  const [showCheckin, setShowCheckin] = useState(false);
 
   useEffect(() => {
     if (!currentCycle) initCycle();
     else refreshInsights();
   }, [currentCycle, initCycle, refreshInsights]);
 
-  useEffect(() => {
-    const todayCheckin = getTodayCheckin();
-    setShowCheckin(!todayCheckin);
-  }, [getTodayCheckin]);
 
   if (!currentCycle) return <Loading />;
 
@@ -71,11 +63,6 @@ export default function DashboardPage() {
       value: c.scores[selectedSector ?? ""]?.value ?? 5,
     }));
 
-  const handleMoodSubmit = (mood: number) => {
-    setCheckinMood(mood);
-    addCheckin(mood);
-    setShowCheckin(false);
-  };
 
   return (
     <div style={{ padding: "0 0 24px" }}>
@@ -125,79 +112,28 @@ export default function DashboardPage() {
           }}
         >
           <StatChip
-            icon={<TrendUp size={14} weight="bold" color="#7AAE7A" />}
+            icon={<TrendUp size={14} weight="bold" color="var(--chip-green-text)" />}
             label="Средний балл"
             value={avgScore.toFixed(1)}
-            color="#EAF4EA"
+            color="var(--chip-green-bg)"
+            textColor="var(--chip-green-text)"
           />
           <StatChip
-            icon={<CalendarBlank size={14} weight="bold" color="#6BAAD6" />}
+            icon={<CalendarBlank size={14} weight="bold" color="var(--chip-blue-text)" />}
             label="До сброса"
             value={`${daysLeft}д`}
-            color="#EDF4FB"
+            color="var(--chip-blue-bg)"
+            textColor="var(--chip-blue-text)"
           />
           <StatChip
-            icon={<Fire size={14} weight="fill" color="#E09040" />}
+            icon={<Fire size={14} weight="fill" color="var(--chip-orange-text)" />}
             label="Серия"
             value={`${user?.streakDays ?? 0}д`}
-            color="#FFF5EB"
+            color="var(--chip-orange-bg)"
+            textColor="var(--chip-orange-text)"
           />
         </div>
       </div>
-
-      {/* Daily check-in */}
-      {showCheckin && (
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          style={{ padding: "0 24px", marginBottom: 16 }}
-        >
-          <div
-            className="card"
-            style={{
-              padding: "18px 20px",
-              background: "linear-gradient(135deg, #F0DCA0 0%, #FDDCB5 100%)",
-              border: "none",
-            }}
-          >
-            <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "#8A5A00", marginBottom: 12, maxWidth: "none" }}>
-              Как ты сегодня?
-            </p>
-            <div style={{ display: "flex", gap: 8 }}>
-              {[
-                { mood: 1, emoji: "😔" },
-                { mood: 2, emoji: "😐" },
-                { mood: 3, emoji: "🙂" },
-                { mood: 4, emoji: "😊" },
-                { mood: 5, emoji: "🤩" },
-              ].map(({ mood, emoji }) => (
-                <motion.button
-                  key={mood}
-                  whileTap={{ scale: 0.85 }}
-                  whileHover={{ scale: 1.15, y: -3 }}
-                  onClick={() => handleMoodSubmit(mood)}
-                  style={{
-                    flex: 1,
-                    height: 44,
-                    borderRadius: 12,
-                    border: "none",
-                    background: "rgba(255,255,255,0.6)",
-                    fontSize: 22,
-                    cursor: "pointer",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    transition: "all 0.15s",
-                  }}
-                >
-                  {emoji}
-                </motion.button>
-              ))}
-            </div>
-          </div>
-        </motion.div>
-      )}
 
       {/* Wheel */}
       <div style={{ padding: "0 24px" }}>
@@ -314,7 +250,7 @@ export default function DashboardPage() {
                       style={{
                         flex: 1,
                         height: 4,
-                        background: "rgba(0,0,0,0.08)",
+                        background: "var(--border-strong)",
                         borderRadius: 2,
                         overflow: "hidden",
                       }}
@@ -390,11 +326,13 @@ function StatChip({
   label,
   value,
   color,
+  textColor,
 }: {
   icon: React.ReactNode;
   label: string;
   value: string;
   color: string;
+  textColor?: string;
 }) {
   return (
     <div
@@ -411,7 +349,7 @@ function StatChip({
           {label}
         </span>
       </div>
-      <p style={{ fontSize: "1.125rem", fontWeight: 800, color: "var(--text-primary)", maxWidth: "none" }}>
+      <p style={{ fontSize: "1.125rem", fontWeight: 800, color: textColor ?? "var(--text-primary)", maxWidth: "none" }}>
         {value}
       </p>
     </div>

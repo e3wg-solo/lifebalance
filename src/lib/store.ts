@@ -3,6 +3,8 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import type { LifeCycle, UserProfile, DailyCheckin, Insight, SectorScore } from "@/types";
+
+export type OnboardingScores = Record<string, number>;
 import { SECTORS } from "@/lib/sectors";
 import { generateInsights } from "@/lib/insights";
 
@@ -34,9 +36,11 @@ interface LifeBalanceStore {
   // Auth (mock)
   user: UserProfile | null;
   isAuthenticated: boolean;
+  hasCompletedOnboarding: boolean;
   login: (email: string, name?: string) => void;
   logout: () => void;
   updateUser: (patch: Partial<UserProfile>) => void;
+  completeOnboarding: (scores: OnboardingScores) => void;
 
   // Cycles
   cycles: LifeCycle[];
@@ -64,6 +68,7 @@ export const useLifeBalanceStore = create<LifeBalanceStore>()(
     (set, get) => ({
       user: null,
       isAuthenticated: false,
+      hasCompletedOnboarding: false,
       cycles: [],
       currentCycle: null,
       checkins: [],
@@ -72,6 +77,7 @@ export const useLifeBalanceStore = create<LifeBalanceStore>()(
 
       login: (email, name) => {
         const existing = get().user;
+        const isNewUser = !existing;
         const user: UserProfile = existing ?? {
           id: crypto.randomUUID(),
           email,
@@ -85,10 +91,36 @@ export const useLifeBalanceStore = create<LifeBalanceStore>()(
           },
         };
         set({ user, isAuthenticated: true });
-        // init cycle if none
-        if (!get().currentCycle) {
+        // For existing users with a completed onboarding, init cycle if missing
+        if (!isNewUser && get().hasCompletedOnboarding && !get().currentCycle) {
           get().initCycle();
         }
+      },
+
+      completeOnboarding: (scores: OnboardingScores) => {
+        const { user } = get();
+        if (!user) return;
+        const now = new Date();
+        const end = new Date(now);
+        end.setDate(end.getDate() + 30);
+        const sectorScores: Record<string, SectorScore> = {};
+        Object.entries(scores).forEach(([id, value]) => {
+          sectorScores[id] = { id, value, updatedAt: now.toISOString() };
+        });
+        const newCycle: LifeCycle = {
+          id: crypto.randomUUID(),
+          userId: user.id,
+          startDate: now.toISOString(),
+          endDate: end.toISOString(),
+          scores: sectorScores,
+          label: now.toLocaleDateString("ru-RU", { month: "long", year: "numeric" }),
+        };
+        set((state) => ({
+          cycles: [...state.cycles, newCycle],
+          currentCycle: newCycle,
+          hasCompletedOnboarding: true,
+        }));
+        get().refreshInsights();
       },
 
       logout: () => set({ user: null, isAuthenticated: false }),
@@ -203,6 +235,7 @@ export const useLifeBalanceStore = create<LifeBalanceStore>()(
       partialize: (state) => ({
         user: state.user,
         isAuthenticated: state.isAuthenticated,
+        hasCompletedOnboarding: state.hasCompletedOnboarding,
         cycles: state.cycles,
         currentCycle: state.currentCycle,
         checkins: state.checkins,

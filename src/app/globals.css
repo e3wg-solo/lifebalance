@@ -52,6 +52,26 @@
   --radius-xl: 32px;
   --radius-full: 999px;
 
+  /* Adaptive tinted surfaces (override per dark mode above) */
+  --chip-green-bg: #EAF4EA;
+  --chip-green-text: #4A8A4A;
+  --chip-blue-bg: #EDF4FB;
+  --chip-blue-text: #3A7AAE;
+  --chip-orange-bg: #FFF5EB;
+  --chip-orange-text: #9A5A10;
+
+  --insight-warning-bg: #FFF5E6;
+  --insight-warning-border: #E09040;
+  --insight-success-bg: #EAF7EA;
+  --insight-success-border: #7AAE7A;
+  --insight-tip-bg: #EEF4FF;
+  --insight-tip-border: #7A9CCF;
+  --insight-milestone-bg: #F5F0FB;
+  --insight-milestone-border: #9B7EC8;
+
+  --error-bg: #FFF0F0;
+  --error-text: #D97070;
+
   /* Easing */
   --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
   --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -62,16 +82,36 @@
 [data-theme="dark"] {
   --bg: #141414;
   --surface: #1E1E1E;
-  --surface-hover: #252525;
+  --surface-hover: #2A2A2A;
   --border: rgba(255,255,255,0.08);
-  --border-strong: rgba(255,255,255,0.14);
+  --border-strong: rgba(255,255,255,0.16);
   --text-primary: #F0EDE8;
-  --text-secondary: #A0A0A0;
-  --text-muted: #636363;
+  --text-secondary: #B0B0B0;
+  --text-muted: #686868;
   --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
   --shadow-md: 0 4px 16px rgba(0,0,0,0.35);
   --shadow-lg: 0 12px 40px rgba(0,0,0,0.4);
   --shadow-card: 0 2px 8px rgba(0,0,0,0.25), 0 0 1px rgba(0,0,0,0.3);
+
+  /* Adaptive tinted surfaces for dark mode */
+  --chip-green-bg: rgba(122,174,122,0.15);
+  --chip-green-text: #8FCA8F;
+  --chip-blue-bg: rgba(107,170,214,0.15);
+  --chip-blue-text: #7FBDE0;
+  --chip-orange-bg: rgba(224,144,64,0.15);
+  --chip-orange-text: #E0A060;
+
+  --insight-warning-bg: rgba(224,144,64,0.12);
+  --insight-warning-border: #C0823A;
+  --insight-success-bg: rgba(122,174,122,0.12);
+  --insight-success-border: #6A9E6A;
+  --insight-tip-bg: rgba(107,170,214,0.12);
+  --insight-tip-border: #5A8AB0;
+  --insight-milestone-bg: rgba(155,126,200,0.12);
+  --insight-milestone-border: #8060B0;
+
+  --error-bg: rgba(217,112,112,0.15);
+  --error-text: #E08080;
 }
 
 /* ─────────────────────────────────────────────────────────

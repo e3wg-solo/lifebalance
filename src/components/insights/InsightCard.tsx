@@ -6,23 +6,23 @@ import { SECTORS } from "@/lib/sectors";
 
 const TYPE_CONFIG = {
   warning: {
-    bg: "#FFF5E6",
-    border: "#E09040",
+    bg: "var(--insight-warning-bg)",
+    border: "var(--insight-warning-border)",
     emoji: "⚠️",
   },
   success: {
-    bg: "#EAF7EA",
-    border: "#7AAE7A",
+    bg: "var(--insight-success-bg)",
+    border: "var(--insight-success-border)",
     emoji: "✅",
   },
   tip: {
-    bg: "#EEF4FF",
-    border: "#7A9CCF",
+    bg: "var(--insight-tip-bg)",
+    border: "var(--insight-tip-border)",
     emoji: "💡",
   },
   milestone: {
-    bg: "#F5F0FB",
-    border: "#9B7EC8",
+    bg: "var(--insight-milestone-bg)",
+    border: "var(--insight-milestone-border)",
     emoji: "🏆",
   },
 };
