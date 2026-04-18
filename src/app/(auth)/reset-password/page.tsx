@@ -4,7 +4,7 @@ import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { Lock, Eye, EyeSlash, Leaf, ArrowLeft, CheckCircle, Warning } from "@phosphor-icons/react";
+import { Lock, Eye, EyeSlash, ArrowLeft, CheckCircle, Warning } from "@phosphor-icons/react";
 import { supabase } from "@/lib/supabase";
 import { useT } from "@/lib/i18n/useT";
 
@@ -117,15 +117,16 @@ export default function ResetPasswordPage() {
               width: 64,
               height: 64,
               borderRadius: 20,
-              background: "#C8DFC8",
+              background: "#F7F8E9",
               display: "flex",
               alignItems: "center",
               justifyContent: "center",
               margin: "0 auto 16px",
-              boxShadow: "0 4px 16px rgba(122,174,122,0.3)",
+              boxShadow: "0 4px 16px rgba(122,174,122,0.2)",
             }}
           >
-            <Leaf size={32} weight="fill" color="#7AAE7A" />
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/icons/logo.svg" alt="" width={49} height={49} />
           </div>
           <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>
             {t("auth.resetPasswordTitle")}
