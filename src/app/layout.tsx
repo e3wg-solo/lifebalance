@@ -1,6 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import { ThemeProvider } from "@/components/providers/ThemeProvider";
+import { LocaleProvider } from "@/components/providers/LocaleProvider";
+import { ServiceWorkerRegistrar } from "@/components/providers/ServiceWorkerRegistrar";
+import { SupabaseAuthProvider } from "@/components/providers/SupabaseAuthProvider";
 
 export const metadata: Metadata = {
   title: {
@@ -22,7 +25,10 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: "#FAF8F5",
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#FAF8F5" },
+    { media: "(prefers-color-scheme: dark)", color: "#141414" },
+  ],
   width: "device-width",
   initialScale: 1,
   maximumScale: 1,
@@ -36,11 +42,25 @@ export default function RootLayout({
   return (
     <html lang="ru" suppressHydrationWarning>
       <head>
-        <link rel="apple-touch-icon" href="/icons/icon-192.png" />
+        {/* Favicons */}
+        <link rel="icon" type="image/png" sizes="48x48" href="/icons/favicon-48.png" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/icons/favicon-32.png" />
+        <link rel="icon" type="image/png" sizes="16x16" href="/icons/favicon-16.png" />
+        {/* iOS apple-touch-icons */}
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon.png" />
+        <link rel="apple-touch-icon" sizes="167x167" href="/icons/apple-touch-icon-167.png" />
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152.png" />
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body>
-        <ThemeProvider>{children}</ThemeProvider>
+        <ServiceWorkerRegistrar />
+        <SupabaseAuthProvider>
+          <ThemeProvider>
+            <LocaleProvider>{children}</LocaleProvider>
+          </ThemeProvider>
+        </SupabaseAuthProvider>
       </body>
     </html>
   );

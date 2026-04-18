@@ -29,7 +29,7 @@ export function WheelRadar({ cycle }: { cycle: LifeCycle }) {
   return (
     <ResponsiveContainer width="100%" height={260}>
       <RadarChart data={data}>
-        <PolarGrid stroke="rgba(0,0,0,0.08)" />
+        <PolarGrid stroke="var(--border-strong)" />
         <PolarAngleAxis
           dataKey="subject"
           tick={{ fill: "var(--text-secondary)", fontSize: 10, fontFamily: "Outfit, sans-serif" }}
@@ -74,7 +74,7 @@ export function ProgressChart({ cycles, sectorId }: ProgressChartProps) {
               <stop offset="95%" stopColor="#7AAE7A" stopOpacity={0} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--text-secondary)", fontFamily: "Outfit, sans-serif" }} />
           <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "Outfit, sans-serif" }} />
           <Tooltip
@@ -102,7 +102,7 @@ export function ProgressChart({ cycles, sectorId }: ProgressChartProps) {
   return (
     <ResponsiveContainer width="100%" height={180}>
       <LineChart data={data}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(0,0,0,0.06)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" />
         <XAxis dataKey="name" tick={{ fontSize: 10, fill: "var(--text-secondary)", fontFamily: "Outfit, sans-serif" }} />
         <YAxis domain={[0, 10]} tick={{ fontSize: 10, fill: "var(--text-muted)", fontFamily: "Outfit, sans-serif" }} />
         <Tooltip

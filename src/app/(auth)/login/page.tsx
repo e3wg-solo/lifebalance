@@ -1,32 +1,63 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { Envelope, Lock, Eye, EyeSlash, Leaf } from "@phosphor-icons/react";
 import { useLifeBalanceStore } from "@/lib/store";
+import { useT } from "@/lib/i18n/useT";
+
+function mapAuthError(msg: string, t: (key: string) => string): string {
+  if (msg.includes("Invalid login credentials") || msg.includes("invalid_credentials")) {
+    return t("auth.errorInvalid");
+  }
+  if (msg.includes("Failed to fetch") || msg.includes("NetworkError")) {
+    return t("auth.errorNetwork");
+  }
+  return msg;
+}
 
 export default function LoginPage() {
   const router = useRouter();
-  const { login } = useLifeBalanceStore();
+  const { login, isAuthenticated, hasCompletedOnboarding } = useLifeBalanceStore();
+  const { t } = useT();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPwd, setShowPwd] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const handleSubmit = useCallback(
     async (e: React.FormEvent) => {
       e.preventDefault();
+      setError(null);
       setLoading(true);
-      await new Promise((r) => setTimeout(r, 500));
-      login(email);
-      const onboarded = useLifeBalanceStore.getState().hasCompletedOnboarding;
-      router.push(onboarded ? "/dashboard" : "/onboarding");
+      try {
+        await login(email, password);
+        // onAuthStateChange → hydrateFromSupabase runs asynchronously;
+        // wait briefly so store state is populated before redirect
+        await new Promise((r) => setTimeout(r, 300));
+        const state = useLifeBalanceStore.getState();
+        router.push(state.hasCompletedOnboarding ? "/dashboard" : "/onboarding");
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        setError(mapAuthError(msg, t));
+      } finally {
+        setLoading(false);
+      }
     },
-    [email, login, router]
+    [email, password, login, router, t]
   );
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      router.replace(hasCompletedOnboarding ? "/dashboard" : "/onboarding");
+    }
+  }, [isAuthenticated, hasCompletedOnboarding, router]);
+
+  if (isAuthenticated) return null;
 
   return (
     <div
@@ -36,10 +67,9 @@ export default function LoginPage() {
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        padding: 24,
+        padding: 16,
       }}
     >
-      {/* Decorative blobs */}
       <div
         style={{
           position: "fixed",
@@ -71,7 +101,6 @@ export default function LoginPage() {
         transition={{ type: "spring", stiffness: 280, damping: 26 }}
         style={{ width: "100%", maxWidth: 400 }}
       >
-        {/* Logo */}
         <div style={{ textAlign: "center", marginBottom: 40 }}>
           <div
             style={{
@@ -92,20 +121,15 @@ export default function LoginPage() {
             LifeBalance
           </h1>
           <p style={{ fontSize: "0.9375rem", color: "var(--text-secondary)", maxWidth: "none" }}>
-            Войди, чтобы продолжить свой путь
+            {t("auth.loginSubtitleFull")}
           </p>
         </div>
 
-        {/* Card */}
-        <div
-          className="card"
-          style={{ padding: 28 }}
-        >
+        <div className="card" style={{ padding: 28 }}>
           <form onSubmit={handleSubmit} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            {/* Email */}
             <div>
               <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>
-                Email
+                {t("auth.email")}
               </label>
               <div style={{ position: "relative" }}>
                 <Envelope
@@ -127,11 +151,18 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Password */}
             <div>
-              <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>
-                Пароль
-              </label>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "var(--text-secondary)" }}>
+                  {t("auth.password")}
+                </label>
+                <Link
+                  href="/forgot-password"
+                  style={{ fontSize: "0.8125rem", fontWeight: 600, color: "#7AAE7A", textDecoration: "none" }}
+                >
+                  {t("auth.forgotPassword")}
+                </Link>
+              </div>
               <div style={{ position: "relative" }}>
                 <Lock
                   size={16}
@@ -162,16 +193,29 @@ export default function LoginPage() {
                     cursor: "pointer",
                     padding: 4,
                   }}
-                  aria-label={showPwd ? "Скрыть" : "Показать"}
+                  aria-label={showPwd ? t("auth.hidePassword") : t("auth.showPassword")}
                 >
                   {showPwd ? <EyeSlash size={16} color="var(--text-muted)" /> : <Eye size={16} color="var(--text-muted)" />}
                 </button>
               </div>
             </div>
 
+            {error && (
+              <p
+                style={{
+                  fontSize: "0.8125rem",
+                  color: "#E05353",
+                  background: "rgba(224,83,83,0.08)",
+                  borderRadius: 8,
+                  padding: "8px 12px",
+                  margin: 0,
+                  maxWidth: "none",
+                }}
+              >
+                {error}
+              </p>
+            )}
 
-
-            {/* Submit */}
             <motion.button
               type="submit"
               className="btn btn-primary"
@@ -186,19 +230,18 @@ export default function LoginPage() {
               }}
               id="login-submit"
             >
-              {loading ? "Входим..." : "Войти"}
+              {loading ? t("auth.loadingLogin") : t("auth.loginBtn")}
             </motion.button>
           </form>
         </div>
 
-        {/* Footer */}
         <p style={{ textAlign: "center", marginTop: 20, fontSize: "0.875rem", color: "var(--text-secondary)", maxWidth: "none" }}>
-          Нет аккаунта?{" "}
+          {t("auth.noAccount")}{" "}
           <Link
             href="/register"
             style={{ color: "#7AAE7A", fontWeight: 600, textDecoration: "none" }}
           >
-            Зарегистрироваться
+            {t("auth.orRegister")}
           </Link>
         </p>
       </motion.div>

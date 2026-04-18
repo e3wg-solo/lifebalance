@@ -4,40 +4,66 @@ import { useState } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { useLifeBalanceStore } from "@/lib/store";
+import { useT } from "@/lib/i18n/useT";
+import type { Language } from "@/types";
 import {
   Moon,
   Sun,
   DeviceMobile,
   Bell,
   SignOut,
-  Leaf,
+  Translate,
+  Vibrate,
 } from "@phosphor-icons/react";
 
 type Theme = "light" | "dark" | "system";
 
-const THEME_OPTIONS: { value: Theme; label: string; icon: React.ReactNode }[] = [
-  { value: "light", label: "Светлая", icon: <Sun size={16} weight="fill" /> },
-  { value: "dark", label: "Тёмная", icon: <Moon size={16} weight="fill" /> },
-  { value: "system", label: "Системная", icon: <DeviceMobile size={16} weight="fill" /> },
-];
-
 export default function SettingsPage() {
   const router = useRouter();
+  const { t } = useT();
   const { user, logout, updateUser } = useLifeBalanceStore();
   const [name, setName] = useState(user?.name ?? "");
   const [saved, setSaved] = useState(false);
 
   const theme = user?.preferences?.theme ?? "system";
+  const language: Language = user?.preferences?.language ?? "system";
+  const haptics = user?.preferences?.haptics ?? true;
+  const notifications = user?.preferences?.notifications ?? true;
+
+  const THEME_OPTIONS: { value: Theme; label: string; icon: React.ReactNode }[] = [
+    { value: "light", label: t("settings.themeLight"), icon: <Sun size={16} weight="fill" /> },
+    { value: "dark", label: t("settings.themeDark"), icon: <Moon size={16} weight="fill" /> },
+    { value: "system", label: t("settings.themeSystem"), icon: <DeviceMobile size={16} weight="fill" /> },
+  ];
+
+  const LANG_OPTIONS: { value: Language; label: string }[] = [
+    { value: "ru", label: t("settings.langRu") },
+    { value: "en", label: t("settings.langEn") },
+    { value: "system", label: t("settings.langSystem") },
+  ];
 
   const handleThemeChange = (t: Theme) => {
     updateUser({ preferences: { ...user!.preferences, theme: t } });
+  };
+
+  const handleLanguageChange = (lang: Language) => {
+    updateUser({ preferences: { ...user!.preferences, language: lang } });
   };
 
   const handleNotificationsToggle = () => {
     updateUser({
       preferences: {
         ...user!.preferences,
-        notifications: !user?.preferences?.notifications,
+        notifications: !notifications,
+      },
+    });
+  };
+
+  const handleHapticsToggle = () => {
+    updateUser({
+      preferences: {
+        ...user!.preferences,
+        haptics: !haptics,
       },
     });
   };
@@ -53,26 +79,27 @@ export default function SettingsPage() {
     router.push("/login");
   };
 
+  const handleRequestNotifications = async () => {
+    if (typeof Notification !== "undefined" && Notification.permission === "default") {
+      await Notification.requestPermission();
+    }
+  };
+
   if (!user) return null;
 
   return (
     <div style={{ padding: "0 0 24px" }}>
       {/* Header */}
-      <div
-        style={{
-          padding: "56px 24px 24px",
-          background: "linear-gradient(180deg, rgba(212,197,226,0.2) 0%, transparent 100%)",
-        }}
-      >
+      <div style={{ padding: "24px 16px 24px" }}>
         <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: 4 }}>
-          Настройки
+          {t("settings.title")}
         </h1>
         <p style={{ fontSize: "0.9375rem", color: "var(--text-secondary)", maxWidth: "none" }}>
-          Аккаунт и предпочтения
+          {t("settings.subtitle")}
         </p>
       </div>
 
-      <div style={{ padding: "0 24px", display: "flex", flexDirection: "column", gap: 16 }}>
+      <div style={{ padding: "0 16px", display: "flex", flexDirection: "column", gap: 16 }}>
         {/* Profile card */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
@@ -86,13 +113,11 @@ export default function SettingsPage() {
                 width: 56,
                 height: 56,
                 borderRadius: 18,
-                background: "var(--health)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
+                overflow: "hidden",
+                flexShrink: 0,
               }}
             >
-              <Leaf size={28} weight="fill" color="#7AAE7A" />
+              <img src="/icons/logo.svg" alt="LifeBalance" width={56} height={56} style={{ display: "block", width: 56, height: 56 }} />
             </div>
             <div>
               <p style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)", maxWidth: "none" }}>
@@ -104,17 +129,16 @@ export default function SettingsPage() {
             </div>
           </div>
 
-          {/* Name field */}
           <div>
             <label style={{ display: "block", fontSize: "0.8125rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 6 }}>
-              Имя
+              {t("settings.nameLabel")}
             </label>
             <div style={{ display: "flex", gap: 8 }}>
               <input
                 className="input"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="Как тебя зовут?"
+                placeholder={t("settings.namePlaceholder")}
                 style={{ flex: 1 }}
                 id="settings-name"
               />
@@ -124,7 +148,7 @@ export default function SettingsPage() {
                 onClick={handleSaveName}
                 style={{ flexShrink: 0 }}
               >
-                {saved ? "✓" : "Сохранить"}
+                {saved ? "✓" : t("common.save")}
               </motion.button>
             </div>
           </div>
@@ -134,12 +158,12 @@ export default function SettingsPage() {
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.06 }}
+          transition={{ delay: 0.05 }}
           className="card"
           style={{ padding: 20 }}
         >
           <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 12, maxWidth: "none" }}>
-            Тема оформления
+            {t("settings.theme")}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
             {THEME_OPTIONS.map(({ value, label, icon }) => (
@@ -171,50 +195,94 @@ export default function SettingsPage() {
           </div>
         </motion.div>
 
-        {/* Notifications */}
+        {/* Language */}
         <motion.div
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1 }}
+          transition={{ delay: 0.08 }}
           className="card"
           style={{ padding: 20 }}
         >
-          <SettingsRow
-            icon={<Bell size={18} weight={user.preferences?.notifications ? "fill" : "regular"} color="var(--chip-blue-text)" />}
-            label="Напоминания"
-            description="Уведомление о новом цикле через 30 дней"
-            right={
+          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 12 }}>
+            <Translate size={16} weight="fill" color="var(--chip-blue-text)" />
+            <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--text-primary)", maxWidth: "none" }}>
+              {t("settings.language")}
+            </p>
+          </div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 8 }}>
+            {LANG_OPTIONS.map(({ value, label }) => (
               <motion.button
-                whileTap={{ scale: 0.9 }}
-                onClick={handleNotificationsToggle}
+                key={value}
+                whileTap={{ scale: 0.94 }}
+                onClick={() => handleLanguageChange(value)}
                 style={{
-                  width: 46,
-                  height: 26,
-                  borderRadius: 13,
-                  background: user.preferences?.notifications ? "#7AAE7A" : "rgba(0,0,0,0.12)",
-                  border: "none",
+                  display: "flex",
+                  flexDirection: "column",
+                  alignItems: "center",
+                  gap: 6,
+                  padding: "12px 8px",
+                  borderRadius: 12,
+                  border: `2px solid ${language === value ? "var(--chip-blue-text)" : "var(--border)"}`,
+                  background: language === value ? "var(--chip-blue-bg)" : "var(--surface)",
                   cursor: "pointer",
-                  position: "relative",
-                  transition: "background 0.25s",
-                  flexShrink: 0,
+                  fontSize: "0.8125rem",
+                  fontWeight: 600,
+                  color: language === value ? "var(--chip-blue-text)" : "var(--text-secondary)",
+                  transition: "all 0.2s",
                 }}
-                id="notifications-toggle"
-                aria-label="Переключить уведомления"
+                id={`lang-${value}`}
               >
-                <motion.div
-                  animate={{ x: user.preferences?.notifications ? 22 : 2 }}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                  style={{
-                    position: "absolute",
-                    top: 3,
-                    width: 20,
-                    height: 20,
-                    borderRadius: "50%",
-                    background: "white",
-                    boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
-                  }}
-                />
+                {label}
               </motion.button>
+            ))}
+          </div>
+        </motion.div>
+
+        {/* Notifications + Haptics */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.11 }}
+          className="card"
+          style={{ padding: 20, display: "flex", flexDirection: "column", gap: 16 }}
+        >
+          <SettingsRow
+            icon={<Bell size={18} weight={notifications ? "fill" : "regular"} color="var(--chip-blue-text)" />}
+            label={t("settings.notifications")}
+            description={t("settings.notificationsHint")}
+            right={
+              <Toggle
+                checked={notifications}
+                onToggle={handleNotificationsToggle}
+                id="notifications-toggle"
+                activeColor="#7AAE7A"
+              />
+            }
+          />
+
+          {typeof Notification !== "undefined" && Notification.permission === "default" && notifications && (
+            <button
+              onClick={handleRequestNotifications}
+              className="btn btn-accent"
+              style={{ fontSize: "0.8125rem", alignSelf: "flex-start" }}
+            >
+              {t("settings.requestNotifications")}
+            </button>
+          )}
+
+          <div style={{ height: 1, background: "var(--border)" }} />
+
+          <SettingsRow
+            icon={<Vibrate size={18} weight={haptics ? "fill" : "regular"} color="var(--chip-orange-text)" />}
+            label={t("settings.haptics")}
+            description={t("settings.hapticsHint")}
+            right={
+              <Toggle
+                checked={haptics}
+                onToggle={handleHapticsToggle}
+                id="haptics-toggle"
+                activeColor="#E09040"
+              />
             }
           />
         </motion.div>
@@ -228,7 +296,7 @@ export default function SettingsPage() {
           style={{ padding: 20 }}
         >
           <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 14, maxWidth: "none" }}>
-            Статистика
+            {t("settings.stats")}
           </p>
           <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
             <div style={{ background: "var(--chip-green-bg)", borderRadius: 12, padding: "12px 14px" }}>
@@ -236,15 +304,15 @@ export default function SettingsPage() {
                 {useLifeBalanceStore.getState().cycles.length}
               </p>
               <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 500, maxWidth: "none" }}>
-                Циклов
+                {t("settings.statsCycles")}
               </p>
             </div>
             <div style={{ background: "var(--chip-orange-bg)", borderRadius: 12, padding: "12px 14px" }}>
               <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--chip-orange-text)", maxWidth: "none" }}>
-                {user.streakDays ?? 0}
+                {useLifeBalanceStore.getState().getWeekStreak()}
               </p>
               <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", fontWeight: 500, maxWidth: "none" }}>
-                Дней подряд
+                {t("settings.statsDays")}
               </p>
             </div>
           </div>
@@ -273,11 +341,59 @@ export default function SettingsPage() {
         >
           <SignOut size={20} weight="regular" color="#D97070" />
           <span style={{ fontSize: "0.9375rem", fontWeight: 600, color: "#D97070" }}>
-            Выйти из аккаунта
+            {t("settings.logout")}
           </span>
         </motion.button>
       </div>
     </div>
+  );
+}
+
+function Toggle({
+  checked,
+  onToggle,
+  id,
+  activeColor = "#7AAE7A",
+}: {
+  checked: boolean;
+  onToggle: () => void;
+  id: string;
+  activeColor?: string;
+}) {
+  return (
+    <motion.button
+      whileTap={{ scale: 0.9 }}
+      onClick={onToggle}
+      style={{
+        width: 46,
+        height: 26,
+        borderRadius: 13,
+        background: checked ? activeColor : "var(--border-strong)",
+        border: "none",
+        cursor: "pointer",
+        position: "relative",
+        transition: "background 0.25s",
+        flexShrink: 0,
+      }}
+      id={id}
+      aria-label={id}
+      role="switch"
+      aria-checked={checked}
+    >
+      <motion.div
+        animate={{ x: checked ? 22 : 2 }}
+        transition={{ type: "spring", stiffness: 500, damping: 30 }}
+        style={{
+          position: "absolute",
+          top: 3,
+          width: 20,
+          height: 20,
+          borderRadius: "50%",
+          background: "white",
+          boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+        }}
+      />
+    </motion.button>
   );
 }
 

@@ -10,17 +10,20 @@ import {
   House,
 } from "@phosphor-icons/react";
 import { useLifeBalanceStore } from "@/lib/store";
-
-const NAV_ITEMS = [
-  { href: "/dashboard", label: "Главная", icon: House },
-  { href: "/wheel", label: "Колесо", icon: ChartPie },
-  { href: "/history", label: "История", icon: ClockCounterClockwise },
-  { href: "/settings", label: "Настройки", icon: Gear },
-];
+import { haptic } from "@/lib/haptics";
+import { useT } from "@/lib/i18n/useT";
 
 export function BottomNav() {
   const pathname = usePathname();
   const user = useLifeBalanceStore((s) => s.user);
+  const { t } = useT();
+
+  const NAV_ITEMS = [
+    { href: "/dashboard", label: t("nav.home"), icon: House },
+    { href: "/wheel", label: t("nav.wheel"), icon: ChartPie },
+    { href: "/history", label: t("nav.history"), icon: ClockCounterClockwise },
+    { href: "/settings", label: t("nav.settings"), icon: Gear },
+  ];
 
   if (!user) return null;
 
@@ -32,8 +35,10 @@ export function BottomNav() {
         left: 0,
         right: 0,
         zIndex: 30,
-        padding: "0 16px 8px",
-        paddingBottom: "max(8px, env(safe-area-inset-bottom))",
+        padding: "0 16px 16px",
+        // Lift the nav above the home indicator AND above the physical
+        // corner curvature, so its sides aren't clipped on rounded screens.
+        paddingBottom: "max(16px, calc(env(safe-area-inset-bottom) + 12px))",
       }}
     >
       <div
@@ -51,6 +56,7 @@ export function BottomNav() {
             <Link
               key={href}
               href={href}
+              onClick={() => haptic("light")}
               style={{
                 flex: 1,
                 display: "flex",

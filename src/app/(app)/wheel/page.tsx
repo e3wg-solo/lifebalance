@@ -8,9 +8,11 @@ import { WheelOfLife } from "@/components/wheel/WheelOfLife";
 import { SectorSlider } from "@/components/wheel/SectorSlider";
 import { SectorDetail } from "@/components/wheel/SectorDetail";
 import { getSector } from "@/lib/sectors";
+import { useT } from "@/lib/i18n/useT";
 
 export default function WheelPage() {
   const { currentCycle, updateScore, selectedSector, setSelectedSector, cycles } = useLifeBalanceStore();
+  const { t } = useT();
   const [note, setNote] = useState<Record<string, string>>({});
 
   if (!currentCycle) return null;
@@ -25,19 +27,17 @@ export default function WheelPage() {
   }));
 
   return (
-    <div style={{ padding: "0 0 24px" }}>
-      {/* Header */}
-      <div style={{ padding: "56px 24px 20px" }}>
+    <div style={{ padding: "0 0 24px", overflow: "hidden", maxWidth: "100vw" }}>
+      <div style={{ padding: "24px 16px 20px" }}>
         <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>
-          Колесо жизни
+          {t("wheel.title")}
         </h1>
         <p style={{ fontSize: "0.9375rem", color: "var(--text-secondary)", maxWidth: "none" }}>
-          Оцени каждую сферу и найди свой баланс
+          {t("wheel.subtitle")}
         </p>
       </div>
 
-      {/* Wheel */}
-      <div style={{ padding: "0 24px" }}>
+      <div style={{ padding: "0 16px" }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.94 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -53,10 +53,9 @@ export default function WheelPage() {
         </motion.div>
       </div>
 
-      {/* All sliders */}
-      <div style={{ padding: "20px 24px 0" }}>
+      <div style={{ padding: "20px 16px 0" }}>
         <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 16 }}>
-          Настрой оценки
+          {t("wheel.adjustScores")}
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
           {SECTORS.map((sector, i) => (
@@ -70,7 +69,7 @@ export default function WheelPage() {
             >
               <SectorSlider
                 sectorId={sector.id}
-                label={sector.labelRu}
+                label={t(`sectors.${sector.id}.label`)}
                 color={sector.color}
                 colorDark={sector.colorDark}
                 emoji={sector.emoji}
@@ -82,7 +81,6 @@ export default function WheelPage() {
         </div>
       </div>
 
-      {/* Sector detail */}
       {selectedSectorConfig && selectedScore && (
         <SectorDetail
           sector={selectedSectorConfig}

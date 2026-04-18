@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap");
 @import "tailwindcss";
 
 /* ─────────────────────────────────────────────────────────
@@ -57,8 +57,8 @@
   --chip-green-text: #4A8A4A;
   --chip-blue-bg: #EDF4FB;
   --chip-blue-text: #3A7AAE;
-  --chip-orange-bg: #FFF5EB;
-  --chip-orange-text: #9A5A10;
+  --chip-orange-bg: #f8dab0e1;
+  --chip-orange-text: #ae6c3a;
 
   --insight-warning-bg: #FFF5E6;
   --insight-warning-border: #E09040;
@@ -106,12 +106,14 @@
   --insight-success-bg: rgba(122,174,122,0.12);
   --insight-success-border: #6A9E6A;
   --insight-tip-bg: rgba(107,170,214,0.12);
-  --insight-tip-border: #5A8AB0;
+  --insight-tip-border: #5a8ab0;
   --insight-milestone-bg: rgba(155,126,200,0.12);
   --insight-milestone-border: #8060B0;
 
   --error-bg: rgba(217,112,112,0.15);
   --error-text: #E08080;
+
+  --accent-light: rgba(122,174,122,0.18);
 }
 
 /* ─────────────────────────────────────────────────────────
@@ -126,25 +128,32 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
+  overflow-x: hidden;
+  /* Matches body so that any iOS rubber-band / standalone safe-area reveal
+     shows the theme background instead of the browser's default white. */
+  background-color: var(--bg);
+  transition: background-color 0.3s var(--ease-smooth);
 }
 
 body {
   background-color: var(--bg);
   color: var(--text-primary);
-  font-family: "Outfit", sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 16px;
   line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   transition: background-color 0.3s var(--ease-smooth),
               color 0.3s var(--ease-smooth);
+  overflow-x: hidden;
+  max-width: 100vw;
 }
 
 /* ─────────────────────────────────────────────────────────
    TYPOGRAPHY
 ──────────────────────────────────────────────────────────── */
 h1, h2, h3, h4, h5, h6 {
-  font-family: "Outfit", sans-serif;
+  font-family: "Inter", sans-serif;
   line-height: 1.2;
   letter-spacing: -0.02em;
   color: var(--text-primary);
@@ -185,7 +194,7 @@ p {
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  font-family: "Outfit", sans-serif;
+  font-family: "Inter", sans-serif;
   font-weight: 500;
   font-size: 0.9375rem;
   border-radius: var(--radius-full);
@@ -201,7 +210,7 @@ p {
   color: var(--bg);
 }
 .btn-primary:hover {
-  background: #333;
+  background: var(--text-secondary);
   box-shadow: 0 4px 12px rgba(0,0,0,0.2);
 }
 
@@ -221,7 +230,8 @@ p {
   border: 1px solid rgba(122, 174, 122, 0.3);
 }
 .btn-accent:hover {
-  background: #DCF0DC;
+  background: var(--chip-green-bg);
+  filter: brightness(0.95);
 }
 
 /* Badge */
@@ -239,16 +249,31 @@ p {
 
 /* Glass morphism panel */
 .glass {
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.5);
+  background: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(40px) saturate(180%);
+  -webkit-backdrop-filter: blur(40px) saturate(180%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: var(--shadow-md), inset 0 1px 0 rgba(255,255,255,0.6);
+}
+
+/* Fallback for browsers without backdrop-filter support. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  .glass {
+    background: rgba(255, 255, 255, 0.96);
+  }
 }
 
 [data-theme="dark"] .glass {
-  background: rgba(30, 30, 30, 0.75);
+  background: rgba(26, 26, 26, 0.86);
+  backdrop-filter: blur(40px) saturate(160%);
+  -webkit-backdrop-filter: blur(40px) saturate(160%);
   border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  [data-theme="dark"] .glass {
+    background: rgba(20, 20, 20, 0.96);
+  }
 }
 
 /* Input */
@@ -258,7 +283,7 @@ p {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   border-radius: var(--radius-md);
-  font-family: "Outfit", sans-serif;
+  font-family: "Inter", sans-serif;
   font-size: 0.9375rem;
   color: var(--text-primary);
   outline: none;
@@ -335,10 +360,10 @@ p {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0,0,0,0.15);
+  background: var(--border-strong);
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
 /* ─────────────────────────────────────────────────────────
    LAYOUT HELPERS

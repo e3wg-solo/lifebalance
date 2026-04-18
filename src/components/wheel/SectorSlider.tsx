@@ -2,6 +2,9 @@
 
 import { useCallback } from "react";
 import { motion } from "framer-motion";
+import { SectorIcon } from "@/components/icons/SectorIcon";
+import { haptic } from "@/lib/haptics";
+import { useT } from "@/lib/i18n/useT";
 
 interface SectorSliderProps {
   sectorId: string;
@@ -15,14 +18,6 @@ interface SectorSliderProps {
 
 const LEVELS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-function getLevelLabel(v: number): string {
-  if (v <= 2) return "Критично";
-  if (v <= 4) return "Слабо";
-  if (v <= 6) return "Средне";
-  if (v <= 8) return "Хорошо";
-  return "Отлично";
-}
-
 export function SectorSlider({
   sectorId,
   label,
@@ -32,8 +27,19 @@ export function SectorSlider({
   value,
   onChange,
 }: SectorSliderProps) {
+  const { t } = useT();
+
+  const getLevelLabel = (v: number): string => {
+    if (v <= 2) return t("scoreLabels.critical");
+    if (v <= 4) return t("scoreLabels.weak");
+    if (v <= 6) return t("scoreLabels.medium");
+    if (v <= 8) return t("scoreLabels.good");
+    return t("scoreLabels.excellent");
+  };
+
   const handleClick = useCallback(
     (v: number) => {
+      haptic("selection");
       onChange(v);
     },
     [onChange]
@@ -50,7 +56,7 @@ export function SectorSlider({
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-          <span style={{ fontSize: 20 }}>{emoji}</span>
+          <SectorIcon sectorId={sectorId} size={20} color={colorDark} />
           <span
             style={{
               fontFamily: "Outfit, sans-serif",
@@ -89,7 +95,6 @@ export function SectorSlider({
         </div>
       </div>
 
-      {/* Dot track */}
       <div
         style={{
           display: "flex",
@@ -109,38 +114,23 @@ export function SectorSlider({
               whileTap={{ scale: 0.85 }}
               whileHover={{ scale: 1.15 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              aria-label={`Оценка ${level}`}
+              aria-label={`${level}`}
               style={{
                 flex: 1,
                 height: isCurrent ? 28 : active ? 22 : 16,
                 borderRadius: 8,
                 border: "none",
                 cursor: "pointer",
-                background: active ? color : "rgba(0,0,0,0.07)",
+                background: active ? color : "var(--border-strong)",
                 outline: isCurrent ? `2px solid ${colorDark}` : "none",
                 outlineOffset: 1,
                 transition: "height 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275), background 0.15s",
-                position: "relative",
               }}
-            >
-              {isCurrent && (
-                <motion.div
-                  layoutId={`current-${sectorId}`}
-                  style={{
-                    position: "absolute",
-                    inset: 0,
-                    borderRadius: 8,
-                    background: colorDark,
-                    opacity: 0.25,
-                  }}
-                />
-              )}
-            </motion.button>
+            />
           );
         })}
       </div>
 
-      {/* Min–Max labels */}
       <div
         style={{
           display: "flex",
@@ -151,8 +141,8 @@ export function SectorSlider({
           fontWeight: 500,
         }}
       >
-        <span>1 — Критично</span>
-        <span>10 — Идеально</span>
+        <span>1 — {t("scoreLabels.critical")}</span>
+        <span>10 — {t("scoreLabels.excellent")}</span>
       </div>
     </div>
   );

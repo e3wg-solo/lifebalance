@@ -1,29 +1,32 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { Warning, CheckCircle, Lightbulb, Trophy } from "@phosphor-icons/react";
 import type { Insight } from "@/types";
 import { SECTORS } from "@/lib/sectors";
+import { SectorIcon } from "@/components/icons/SectorIcon";
+import { useT } from "@/lib/i18n/useT";
 
 const TYPE_CONFIG = {
   warning: {
     bg: "var(--insight-warning-bg)",
     border: "var(--insight-warning-border)",
-    emoji: "⚠️",
+    icon: <Warning size={18} weight="fill" color="var(--insight-warning-border)" />,
   },
   success: {
     bg: "var(--insight-success-bg)",
     border: "var(--insight-success-border)",
-    emoji: "✅",
+    icon: <CheckCircle size={18} weight="fill" color="var(--insight-success-border)" />,
   },
   tip: {
     bg: "var(--insight-tip-bg)",
     border: "var(--insight-tip-border)",
-    emoji: "💡",
+    icon: <Lightbulb size={18} weight="fill" color="var(--insight-tip-border)" />,
   },
   milestone: {
     bg: "var(--insight-milestone-bg)",
     border: "var(--insight-milestone-border)",
-    emoji: "🏆",
+    icon: <Trophy size={18} weight="fill" color="var(--insight-milestone-border)" />,
   },
 };
 
@@ -35,6 +38,7 @@ interface InsightCardProps {
 export function InsightCard({ insight, index = 0 }: InsightCardProps) {
   const config = TYPE_CONFIG[insight.type];
   const sector = SECTORS.find((s) => s.id === insight.sectorId);
+  const { t } = useT();
 
   return (
     <motion.div
@@ -56,8 +60,8 @@ export function InsightCard({ insight, index = 0 }: InsightCardProps) {
         alignItems: "flex-start",
       }}
     >
-      <span style={{ fontSize: 18, flexShrink: 0, marginTop: 1 }}>{config.emoji}</span>
-      <div>
+      <span style={{ flexShrink: 0, marginTop: 1 }}>{config.icon}</span>
+      <div style={{ minWidth: 0 }}>
         <p
           style={{
             fontSize: "0.875rem",
@@ -97,7 +101,8 @@ export function InsightCard({ insight, index = 0 }: InsightCardProps) {
               borderRadius: 999,
             }}
           >
-            {sector.emoji} {sector.labelRu}
+            <SectorIcon sectorId={sector.id} size={12} color={config.border} />
+            {t(`sectors.${sector.id}.label`)}
           </span>
         )}
       </div>

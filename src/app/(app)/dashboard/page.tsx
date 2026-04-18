@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { useLifeBalanceStore } from "@/lib/store";
 import { SECTORS } from "@/lib/sectors";
@@ -12,8 +12,12 @@ import {
   Fire,
   CalendarBlank,
   TrendUp,
-  ArrowRight,
+  HandWaving,
 } from "@phosphor-icons/react";
+import { SectorIcon } from "@/components/icons/SectorIcon";
+import { WeeklyPulseSheet } from "@/components/wheel/WeeklyPulseSheet";
+import { useT } from "@/lib/i18n/useT";
+import { haptic } from "@/lib/haptics";
 
 export default function DashboardPage() {
   const {
@@ -25,7 +29,12 @@ export default function DashboardPage() {
     updateScore,
     initCycle,
     refreshInsights,
+    getCurrentWeekNumber,
+    hasWeeklyPulse,
+    getWeekStreak,
   } = useLifeBalanceStore();
+  const { t } = useT();
+  const [showPulseSheet, setShowPulseSheet] = useState(false);
 
 
   useEffect(() => {
@@ -62,15 +71,22 @@ export default function DashboardPage() {
       cycle: c.label ?? "",
       value: c.scores[selectedSector ?? ""]?.value ?? 5,
     }));
+  const cycleIndex = cycles.length - 1;
+  const currentWeek = getCurrentWeekNumber();
+  const weekStreak = getWeekStreak();
+  const pulseNeeded =
+    currentCycle &&
+    currentWeek !== null &&
+    !hasWeeklyPulse(currentCycle.id, currentWeek);
 
 
   return (
-    <div style={{ padding: "0 0 24px" }}>
+    <div style={{ padding: "0 0 24px", overflow: "hidden", maxWidth: "100vw" }}>
       {/* Header */}
       <div
         style={{
-          padding: "56px 24px 24px",
-          background: "linear-gradient(180deg, rgba(200,223,200,0.2) 0%, transparent 100%)",
+          padding: "24px 16px 24px",
+          background: "none",
         }}
       >
         <motion.div
@@ -80,14 +96,18 @@ export default function DashboardPage() {
         >
           <p
             style={{
-              fontSize: "0.8125rem",
+              fontSize: "0.875rem",
               color: "var(--text-muted)",
               fontWeight: 500,
-              marginBottom: 2,
+              marginBottom: 6,
               maxWidth: "none",
+              display: "flex",
+              alignItems: "center",
+              gap: 6,
             }}
           >
-            Привет, {user?.name?.split(" ")[0] ?? "друг"} 👋
+            {t("dashboard.greeting", { name: user?.name?.split(" ")[0] ?? "friend" })}
+            <HandWaving size={15} weight="regular" color="var(--text-muted)" />
           </p>
           <h1
             style={{
@@ -95,11 +115,10 @@ export default function DashboardPage() {
               fontWeight: 800,
               color: "var(--text-primary)",
               lineHeight: 1.15,
+              marginBottom: 0,
             }}
           >
-            Твой жизненный
-            <br />
-            баланс
+            {t("dashboard.title")}
           </h1>
         </motion.div>
 
@@ -108,27 +127,27 @@ export default function DashboardPage() {
           style={{
             display: "flex",
             gap: 10,
-            marginTop: 20,
+            marginTop: 24,
           }}
         >
           <StatChip
             icon={<TrendUp size={14} weight="bold" color="var(--chip-green-text)" />}
-            label="Средний балл"
+            label={t("dashboard.avgScore")}
             value={avgScore.toFixed(1)}
             color="var(--chip-green-bg)"
             textColor="var(--chip-green-text)"
           />
           <StatChip
             icon={<CalendarBlank size={14} weight="bold" color="var(--chip-blue-text)" />}
-            label="До сброса"
-            value={`${daysLeft}д`}
+            label={t("dashboard.resetIn")}
+            value={`${daysLeft}${t("common.daysShort")}`}
             color="var(--chip-blue-bg)"
             textColor="var(--chip-blue-text)"
           />
           <StatChip
             icon={<Fire size={14} weight="fill" color="var(--chip-orange-text)" />}
-            label="Серия"
-            value={`${user?.streakDays ?? 0}д`}
+            label={t("dashboard.streak")}
+            value={`${weekStreak}${t("common.weeksShort")}`}
             color="var(--chip-orange-bg)"
             textColor="var(--chip-orange-text)"
           />
@@ -136,7 +155,7 @@ export default function DashboardPage() {
       </div>
 
       {/* Wheel */}
-      <div style={{ padding: "0 24px" }}>
+      <div style={{ padding: "0 16px" }}>
         <motion.div
           initial={{ opacity: 0, scale: 0.92 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -146,7 +165,7 @@ export default function DashboardPage() {
         >
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16, padding: "0 8px" }}>
             <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)" }}>
-              Колесо жизни
+              {t("dashboard.wheelTitle")}
             </h2>
             <span
               style={{
@@ -178,20 +197,73 @@ export default function DashboardPage() {
               maxWidth: "none",
             }}
           >
-            Нажми на сектор, чтобы изменить оценку
+            {t("dashboard.tapHint")}
           </p>
         </motion.div>
       </div>
 
+      {/* Weekly pulse banner */}
+      {pulseNeeded && currentWeek && (
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          style={{ padding: "12px 16px 0" }}
+        >
+          <div
+            style={{
+              background: "var(--chip-blue-bg)",
+              border: "1px solid var(--chip-blue-text)30",
+              borderRadius: 16,
+              padding: "14px 16px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              gap: 12,
+            }}
+          >
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 36, height: 36, borderRadius: 10, background: "var(--chip-blue-text)20", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                <CalendarBlank size={18} weight="fill" color="var(--chip-blue-text)" />
+              </div>
+              <div>
+                <p style={{ fontSize: "0.875rem", fontWeight: 700, color: "var(--text-primary)", maxWidth: "none" }}>
+                  {t("dashboard.weeklyPulseBanner", { week: currentWeek })}
+                </p>
+                <p style={{ fontSize: "0.75rem", color: "var(--text-secondary)", maxWidth: "none" }}>
+                  {t("dashboard.weeklyPulseSubtitle")}
+                </p>
+              </div>
+            </div>
+            <motion.button
+              whileTap={{ scale: 0.95 }}
+              onClick={() => { haptic("light"); setShowPulseSheet(true); }}
+              style={{
+                flexShrink: 0,
+                padding: "8px 14px",
+                borderRadius: 999,
+                background: "var(--chip-blue-text)",
+                color: "white",
+                border: "none",
+                cursor: "pointer",
+                fontSize: "0.8125rem",
+                fontWeight: 600,
+              }}
+            >
+              {t("dashboard.weeklyPulseBtn")}
+            </motion.button>
+          </div>
+        </motion.div>
+      )}
+
       {/* Sector grid */}
-      <div style={{ padding: "16px 24px 0" }}>
+      <div style={{ padding: "20px 16px 0" }}>
         <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 12 }}>
-          Все секторы
+          {t("dashboard.allSectors")}
         </h2>
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
             gap: 10,
           }}
         >
@@ -213,7 +285,7 @@ export default function DashboardPage() {
                   display: "flex",
                   alignItems: "center",
                   gap: 10,
-                  padding: "12px 14px",
+                  padding: "12px 12px",
                   background: isSelected ? sector.color : "var(--surface)",
                   borderRadius: 14,
                   border: `1.5px solid ${isSelected ? sector.colorDark : "var(--border)"}`,
@@ -221,22 +293,40 @@ export default function DashboardPage() {
                   textAlign: "left",
                   boxShadow: isSelected ? `0 4px 12px rgba(${sector.colorRgb}, 0.35)` : "var(--shadow-sm)",
                   transition: "all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                  minWidth: 0,
+                  width: "100%",
+                  overflow: "hidden",
                 }}
               >
-                <span style={{ fontSize: 20 }}>{sector.emoji}</span>
-                <div style={{ flex: 1, minWidth: 0 }}>
+                <SectorIcon sectorId={sector.id} size={20} color={sector.colorDark} weight={isSelected ? "fill" : "regular"} style={{ flexShrink: 0 }} />
+                <div style={{ flex: 1, minWidth: 0, overflow: "hidden" }}>
                   <p
                     style={{
                       fontSize: "0.75rem",
                       fontWeight: 600,
                       color: "var(--text-primary)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
+                      lineHeight: 1.25,
                       maxWidth: "none",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 4,
+                      wordBreak: "break-word",
                     }}
                   >
-                    {sector.labelRu}
+                    {t(`sectors.${sector.id}.label`)}
+                    {scores[sector.id]?.note && (
+                      <span
+                        style={{
+                          width: 5,
+                          height: 5,
+                          borderRadius: "50%",
+                          background: sector.colorDark,
+                          flexShrink: 0,
+                          display: "inline-block",
+                        }}
+                        title="Есть заметка"
+                      />
+                    )}
                   </p>
                   <div
                     style={{
@@ -286,7 +376,7 @@ export default function DashboardPage() {
 
       {/* Insights */}
       {insights.length > 0 && (
-        <div style={{ padding: "20px 24px 0" }}>
+        <div style={{ padding: "20px 16px 0" }}>
           <h2
             style={{
               fontSize: "1rem",
@@ -295,7 +385,7 @@ export default function DashboardPage() {
               marginBottom: 12,
             }}
           >
-            Инсайты
+            {t("insights.title")}
           </h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
             {insights.map((insight, i) => (
@@ -306,11 +396,21 @@ export default function DashboardPage() {
       )}
 
       {/* Sector detail bottom sheet */}
+      {/* Weekly pulse sheet */}
+      {showPulseSheet && currentCycle && currentWeek && (
+        <WeeklyPulseSheet
+          weekNumber={currentWeek}
+          cycleId={currentCycle.id}
+          onClose={() => setShowPulseSheet(false)}
+        />
+      )}
+
       {selectedSectorConfig && selectedScore && (
         <SectorDetail
           sector={selectedSectorConfig}
           score={selectedScore}
           historyValues={historyValues}
+          cycleIndex={cycleIndex}
           onClose={() => setSelectedSector(null)}
           onScoreChange={(sectorId, value) => updateScore(sectorId, value)}
           onNoteChange={(sectorId, note) => updateScore(sectorId, scores[sectorId]?.value ?? 5, note)}
@@ -373,14 +473,13 @@ function Loading() {
           width: 48,
           height: 48,
           borderRadius: 16,
-          background: "#C8DFC8",
+          background: "var(--chip-green-bg)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: 24,
         }}
       >
-        🌿
+        <SectorIcon sectorId="health" size={28} color="#7AAE7A" />
       </div>
     </div>
   );

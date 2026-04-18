@@ -36,6 +36,11 @@ yarn-error.log*
 # vercel
 .vercel
 
+# supabase local state (contains project refs and pooler URLs — not secrets,
+# but should not be committed to avoid noise and future CLI credential leaks)
+supabase/.temp
+supabase/.branches
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

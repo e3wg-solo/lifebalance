@@ -6,46 +6,39 @@ import { motion } from "framer-motion";
 import Link from "next/link";
 import { Leaf, ArrowRight, ChartPie, Lightning, CalendarBlank } from "@phosphor-icons/react";
 import { useLifeBalanceStore } from "@/lib/store";
-
-const FEATURES = [
-  {
-    icon: <ChartPie size={22} weight="fill" color="#7AAE7A" />,
-    title: "Колесо жизни",
-    desc: "8 сфер, визуализация баланса одним взглядом",
-    bg: "#EAF4EA",
-  },
-  {
-    icon: <CalendarBlank size={22} weight="fill" color="#6BAAD6" />,
-    title: "30-дневные циклы",
-    desc: "Трекинг прогресса с архивом всех периодов",
-    bg: "#EDF4FB",
-  },
-  {
-    icon: <Lightning size={22} weight="fill" color="#E09040" />,
-    title: "Умные инсайты",
-    desc: "Авто-анализ и советы по каждой сфере жизни",
-    bg: "#FFF5EB",
-  },
-];
-
-const SECTORS_PREVIEW = [
-  { emoji: "🌿", label: "Здоровье", score: 8, color: "#C8DFC8" },
-  { emoji: "⚡", label: "Спорт", score: 6, color: "#C5DCF0" },
-  { emoji: "💛", label: "Семья", score: 9, color: "#F0DCA0" },
-  { emoji: "🚀", label: "Карьера", score: 7, color: "#D4C5E2" },
-  { emoji: "💎", label: "Доходы", score: 5, color: "#FDDCB5" },
-  { emoji: "🎨", label: "Увлечения", score: 7, color: "#F5C5C5" },
-  { emoji: "✨", label: "Жизнь", score: 8, color: "#B5E5D8" },
-  { emoji: "🌍", label: "Путешествия", score: 4, color: "#E8D5C4" },
-];
+import { useT } from "@/lib/i18n/useT";
+import { SectorIcon } from "@/components/icons/SectorIcon";
+import { SECTORS } from "@/lib/sectors";
 
 export default function LandingPage() {
   const router = useRouter();
   const isAuthenticated = useLifeBalanceStore((s) => s.isAuthenticated);
+  const { t } = useT();
 
   useEffect(() => {
     if (isAuthenticated) router.replace("/dashboard");
   }, [isAuthenticated, router]);
+
+  const FEATURES = [
+    {
+      icon: <ChartPie size={22} weight="fill" color="#7AAE7A" />,
+      title: t("landing.featureWheel") || t("dashboard.wheelTitle"),
+      desc: t("landing.featureWheelDesc") || "8 areas, visualize your balance at a glance",
+      bg: "var(--chip-green-bg)",
+    },
+    {
+      icon: <CalendarBlank size={22} weight="fill" color="#6BAAD6" />,
+      title: t("landing.featureCycles") || "30-day cycles",
+      desc: t("landing.featureCyclesDesc") || "Track progress with a full archive of all periods",
+      bg: "var(--chip-blue-bg)",
+    },
+    {
+      icon: <Lightning size={22} weight="fill" color="#E09040" />,
+      title: t("landing.featureInsights") || t("insights.title"),
+      desc: t("landing.featureInsightsDesc") || "Auto-analysis and tips for every life area",
+      bg: "var(--chip-orange-bg)",
+    },
+  ];
 
   return (
     <div
@@ -55,30 +48,27 @@ export default function LandingPage() {
         overflow: "hidden",
       }}
     >
-      {/* Background blobs */}
       <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 0 }}>
         <div style={{ position: "absolute", top: -160, left: -120, width: 500, height: 500, borderRadius: "50%", background: "radial-gradient(circle, rgba(200,223,200,0.35) 0%, transparent 70%)" }} />
         <div style={{ position: "absolute", top: 200, right: -150, width: 400, height: 400, borderRadius: "50%", background: "radial-gradient(circle, rgba(212,197,226,0.3) 0%, transparent 70%)" }} />
         <div style={{ position: "absolute", bottom: -100, left: "30%", width: 350, height: 350, borderRadius: "50%", background: "radial-gradient(circle, rgba(253,220,181,0.3) 0%, transparent 70%)" }} />
       </div>
 
-      <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "0 24px" }}>
-        {/* Nav */}
+      <div style={{ position: "relative", zIndex: 1, maxWidth: 480, margin: "0 auto", padding: "0 16px" }}>
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", paddingTop: 24 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 12, background: "#C8DFC8", display: "flex", alignItems: "center", justifyContent: "center" }}>
+            <div style={{ width: 36, height: 36, borderRadius: 12, background: "var(--chip-green-bg)", display: "flex", alignItems: "center", justifyContent: "center" }}>
               <Leaf size={18} weight="fill" color="#7AAE7A" />
             </div>
             <span style={{ fontWeight: 800, fontSize: "1rem", color: "var(--text-primary)" }}>LifeBalance</span>
           </div>
           <Link href="/login" style={{ textDecoration: "none" }}>
             <button className="btn btn-ghost" style={{ padding: "8px 16px" }}>
-              Войти
+              {t("landing.login")}
             </button>
           </Link>
         </div>
 
-        {/* Hero */}
         <div style={{ paddingTop: 64, paddingBottom: 40, textAlign: "center" }}>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -90,7 +80,7 @@ export default function LandingPage() {
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 6,
-                background: "#EAF4EA",
+                background: "var(--chip-green-bg)",
                 borderRadius: 999,
                 padding: "5px 14px",
                 marginBottom: 24,
@@ -98,7 +88,7 @@ export default function LandingPage() {
               }}
             >
               <span style={{ fontSize: "0.6875rem", fontWeight: 700, letterSpacing: "0.08em", textTransform: "uppercase", color: "#7AAE7A" }}>
-                Новый 30-дневный цикл
+                {t("landing.badge")}
               </span>
               <span style={{ fontSize: 10, color: "#7AAE7A" }}>✦</span>
             </div>
@@ -113,9 +103,9 @@ export default function LandingPage() {
                 marginBottom: 20,
               }}
             >
-              Колесо жизни
+              {t("landing.title1")}
               <br />
-              <span style={{ color: "#7AAE7A" }}>в твоих руках</span>
+              <span style={{ color: "#7AAE7A" }}>{t("landing.title2")}</span>
             </h1>
             <p
               style={{
@@ -126,8 +116,7 @@ export default function LandingPage() {
                 margin: "0 auto 32px",
               }}
             >
-              8 сфер жизни. 30-дневные циклы. Умные инсайты.
-              Начни строить баланс сегодня.
+              {t("landing.subtitle")}
             </p>
 
             <div style={{ display: "flex", flexDirection: "column", gap: 10, alignItems: "center" }}>
@@ -145,20 +134,19 @@ export default function LandingPage() {
                   }}
                   id="cta-register"
                 >
-                  Начать бесплатно
-                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(255,255,255,0.15)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <ArrowRight size={14} weight="bold" color="white" />
+                  {t("landing.cta")}
+                  <div style={{ width: 28, height: 28, borderRadius: "50%", background: "rgba(128,128,128,0.2)", display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <ArrowRight size={14} weight="bold" color="currentColor" />
                   </div>
                 </motion.button>
               </Link>
               <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", maxWidth: "none" }}>
-                Без кредитной карты · Бесплатно
+                {t("landing.free")}
               </p>
             </div>
           </motion.div>
         </div>
 
-        {/* Preview wheel mockup */}
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
@@ -173,9 +161,9 @@ export default function LandingPage() {
               gap: 8,
             }}
           >
-            {SECTORS_PREVIEW.map((s, i) => (
+            {SECTORS.map((s, i) => (
               <motion.div
-                key={s.label}
+                key={s.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: 0.3 + i * 0.05 }}
@@ -189,16 +177,16 @@ export default function LandingPage() {
                   border: `1px solid ${s.color}`,
                 }}
               >
-                <span style={{ fontSize: 18 }}>{s.emoji}</span>
+                <SectorIcon sectorId={s.id} size={18} color={s.colorDark} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <p style={{ fontSize: "0.75rem", fontWeight: 600, color: "var(--text-primary)", maxWidth: "none" }}>
-                    {s.label}
+                    {t(`sectors.${s.id}.label`)}
                   </p>
                   <div style={{ display: "flex", alignItems: "center", gap: 4, marginTop: 3 }}>
-                    <div style={{ flex: 1, height: 3, background: "rgba(0,0,0,0.1)", borderRadius: 2, overflow: "hidden" }}>
-                      <div style={{ height: "100%", width: `${s.score * 10}%`, background: "rgba(0,0,0,0.25)", borderRadius: 2 }} />
+                    <div style={{ flex: 1, height: 3, background: "var(--border-strong)", borderRadius: 2, overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${(5 + i) * 10}%`, background: "var(--text-secondary)", borderRadius: 2 }} />
                     </div>
-                    <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "rgba(0,0,0,0.5)" }}>{s.score}</span>
+                    <span style={{ fontSize: "0.6875rem", fontWeight: 700, color: "var(--text-secondary)" }}>{5 + (i % 4)}</span>
                   </div>
                 </div>
               </motion.div>
@@ -206,11 +194,10 @@ export default function LandingPage() {
           </div>
         </motion.div>
 
-        {/* Features */}
         <div style={{ display: "flex", flexDirection: "column", gap: 10, marginBottom: 48 }}>
           {FEATURES.map((f, i) => (
             <motion.div
-              key={f.title}
+              key={i}
               initial={{ opacity: 0, x: -16 }}
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: 0.5 + i * 0.08 }}
@@ -228,7 +215,7 @@ export default function LandingPage() {
               <div style={{ width: 44, height: 44, borderRadius: 12, background: f.bg, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                 {f.icon}
               </div>
-              <div>
+              <div style={{ minWidth: 0 }}>
                 <p style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--text-primary)", maxWidth: "none" }}>
                   {f.title}
                 </p>
@@ -240,10 +227,9 @@ export default function LandingPage() {
           ))}
         </div>
 
-        {/* Footer */}
         <div style={{ textAlign: "center", paddingBottom: 40 }}>
           <p style={{ fontSize: "0.8125rem", color: "var(--text-muted)", maxWidth: "none" }}>
-            LifeBalance · Баланс начинается здесь
+            {t("landing.footer")}
           </p>
         </div>
       </div>

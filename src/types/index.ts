@@ -1,8 +1,19 @@
+export type Language = "ru" | "en" | "system";
+
 export interface SectorScore {
   id: string;
   value: number; // 1–10
   note?: string;
   updatedAt: string; // ISO date
+}
+
+export interface WeeklyPulse {
+  id: string;
+  cycleId: string;
+  weekNumber: 1 | 2 | 3 | 4;
+  scores: Record<string, number>; // sectorId → 1..10
+  note?: string;
+  createdAt: string;
 }
 
 export interface LifeCycle {
@@ -13,6 +24,7 @@ export interface LifeCycle {
   scores: Record<string, SectorScore>;
   completedAt?: string;
   label?: string; // e.g. "April 2026"
+  notes?: string; // cycle-level note
 }
 
 export interface DailyCheckin {
@@ -35,6 +47,8 @@ export interface UserProfile {
     theme: "light" | "dark" | "system";
     notifications: boolean;
     reminderDay: number; // day of month 1–28
+    language: Language;
+    haptics: boolean;
   };
 }
 
@@ -53,4 +67,5 @@ export interface AppState {
   currentCycle: LifeCycle | null;
   checkins: DailyCheckin[];
   insights: Insight[];
+  weeklyPulses: WeeklyPulse[];
 }

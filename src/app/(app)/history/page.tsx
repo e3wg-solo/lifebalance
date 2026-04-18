@@ -2,13 +2,18 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import { useLifeBalanceStore } from "@/lib/store";
 import { SECTORS } from "@/lib/sectors";
 import { ProgressChart } from "@/components/history/ProgressChart";
 import { WheelOfLife } from "@/components/wheel/WheelOfLife";
+import { ChartLineUp } from "@phosphor-icons/react";
+import { SectorIcon } from "@/components/icons/SectorIcon";
+import { useT } from "@/lib/i18n/useT";
 
 export default function HistoryPage() {
   const { cycles } = useLifeBalanceStore();
+  const { t, lang } = useT();
   const [selectedSector, setSelectedSector] = useState<string | undefined>(undefined);
 
   const completedCycles = cycles.filter((c) => c.completedAt);
@@ -16,9 +21,9 @@ export default function HistoryPage() {
 
   if (allCycles.length === 0) {
     return (
-      <div style={{ padding: "56px 24px", textAlign: "center" }}>
+      <div style={{ padding: "24px 16px", textAlign: "center" }}>
         <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: 12 }}>
-          История
+          {t("history.title")}
         </h1>
         <div
           style={{
@@ -29,50 +34,53 @@ export default function HistoryPage() {
             gap: 12,
           }}
         >
-          <span style={{ fontSize: 64 }}>📈</span>
+          <ChartLineUp size={64} weight="thin" color="var(--text-muted)" />
           <p style={{ fontSize: "1rem", fontWeight: 600, color: "var(--text-secondary)", maxWidth: "none" }}>
-            История пока пуста
+            {t("history.empty")}
           </p>
           <p style={{ fontSize: "0.875rem", color: "var(--text-muted)", maxWidth: 260, textAlign: "center" }}>
-            Заполни первый цикл и возвращайся через 30 дней
+            {t("history.emptyHint")}
           </p>
         </div>
       </div>
     );
   }
 
+  const dateFmt = lang === "ru" ? "ru-RU" : "en-US";
+
   return (
-    <div style={{ padding: "0 0 24px" }}>
-      {/* Header */}
-      <div style={{ padding: "56px 24px 20px" }}>
+    <div style={{ padding: "0 0 24px", overflow: "hidden", maxWidth: "100vw" }}>
+      <div style={{ padding: "24px 16px 20px" }}>
         <h1 style={{ fontSize: "1.75rem", fontWeight: 800, color: "var(--text-primary)", marginBottom: 6 }}>
-          История
+          {t("history.title")}
         </h1>
         <p style={{ fontSize: "0.9375rem", color: "var(--text-secondary)", maxWidth: "none" }}>
-          {allCycles.length} {allCycles.length === 1 ? "цикл" : "цикла"} · трекинг с{" "}
-          {new Date(allCycles[0].startDate).toLocaleDateString("ru-RU", { month: "long", year: "numeric" })}
+          {allCycles.length === 1
+            ? t("history.cycleCount", { count: allCycles.length })
+            : t("history.cycleCountPlural", { count: allCycles.length })}{" · "}
+          {t("history.trackingSince", {
+            date: new Date(allCycles[0].startDate).toLocaleDateString(dateFmt, { month: "long", year: "numeric" }),
+          })}
         </p>
       </div>
 
-      {/* Overall progress chart */}
-      <div style={{ padding: "0 24px", marginBottom: 20 }}>
+      <div style={{ padding: "0 16px", marginBottom: 20 }}>
         <div className="card" style={{ padding: "20px" }}>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 16 }}>
             <h2 style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--text-primary)" }}>
-              Средний балл
+              {t("history.avgScore")}
             </h2>
             <span style={{ fontSize: "0.75rem", color: "var(--text-muted)", background: "var(--surface-hover)", padding: "3px 10px", borderRadius: 999 }}>
-              Все циклы
+              {t("history.allCyclesFilter")}
             </span>
           </div>
           <ProgressChart cycles={allCycles} />
         </div>
       </div>
 
-      {/* Sector filter */}
-      <div style={{ padding: "0 24px", marginBottom: 16 }}>
+      <div style={{ padding: "0 16px", marginBottom: 16 }}>
         <p style={{ fontSize: "0.8125rem", fontWeight: 600, color: "var(--text-secondary)", marginBottom: 10, maxWidth: "none" }}>
-          По секторам
+          {t("history.bySector")}
         </p>
         <div style={{ display: "flex", gap: 6, overflowX: "auto", paddingBottom: 4 }}>
           {SECTORS.map((s) => (
@@ -96,28 +104,27 @@ export default function HistoryPage() {
                 transition: "all 0.15s",
               }}
             >
-              {s.emoji}
-              <span>{s.labelRu}</span>
+              <SectorIcon sectorId={s.id} size={14} color={selectedSector === s.id ? s.colorDark : "var(--text-muted)"} />
+              <span>{t(`sectors.${s.id}.label`)}</span>
             </motion.button>
           ))}
         </div>
       </div>
 
       {selectedSector && (
-        <div style={{ padding: "0 24px", marginBottom: 20 }}>
+        <div style={{ padding: "0 16px", marginBottom: 20 }}>
           <div className="card" style={{ padding: 20 }}>
             <h2 style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 16 }}>
-              {SECTORS.find((s) => s.id === selectedSector)?.labelRu}
+              {t(`sectors.${selectedSector}.label`)}
             </h2>
             <ProgressChart cycles={allCycles} sectorId={selectedSector} />
           </div>
         </div>
       )}
 
-      {/* Cycles list */}
-      <div style={{ padding: "0 24px" }}>
+      <div style={{ padding: "0 16px" }}>
         <h2 style={{ fontSize: "1rem", fontWeight: 700, color: "var(--text-primary)", marginBottom: 12 }}>
-          Все циклы
+          {t("history.allCycles")}
         </h2>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
           {[...allCycles].reverse().map((cycle, i) => {
@@ -126,15 +133,14 @@ export default function HistoryPage() {
             const isActive = !cycle.completedAt;
 
             return (
+              <Link key={cycle.id} href={`/history/${cycle.id}`} style={{ textDecoration: "none", display: "block" }}>
               <motion.div
-                key={cycle.id}
                 initial={{ opacity: 0, y: 8 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.06 }}
-                className="card"
+                className="card card-interactive"
                 style={{ overflow: "hidden" }}
               >
-                {/* Cycle header */}
                 <div
                   style={{
                     display: "flex",
@@ -144,7 +150,7 @@ export default function HistoryPage() {
                     borderBottom: "1px solid var(--border)",
                   }}
                 >
-                  <div>
+                  <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
                       <p style={{ fontSize: "0.9375rem", fontWeight: 700, color: "var(--text-primary)", maxWidth: "none" }}>
                         {cycle.label}
@@ -156,39 +162,39 @@ export default function HistoryPage() {
                             fontWeight: 600,
                             textTransform: "uppercase",
                             letterSpacing: "0.04em",
-                            color: "#7AAE7A",
-                            background: "#EAF4EA",
+                            color: "var(--chip-green-text)",
+                            background: "var(--chip-green-bg)",
                             padding: "2px 8px",
                             borderRadius: 999,
+                            flexShrink: 0,
                           }}
                         >
-                          Текущий
+                          {t("common.current")}
                         </span>
                       )}
                     </div>
                     <p style={{ fontSize: "0.75rem", color: "var(--text-muted)", marginTop: 2, maxWidth: "none" }}>
-                      {new Date(cycle.startDate).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
+                      {new Date(cycle.startDate).toLocaleDateString(dateFmt, { day: "numeric", month: "short" })}
                       {" — "}
-                      {new Date(cycle.endDate).toLocaleDateString("ru-RU", { day: "numeric", month: "short" })}
+                      {new Date(cycle.endDate).toLocaleDateString(dateFmt, { day: "numeric", month: "short" })}
                     </p>
                   </div>
-                  <div style={{ textAlign: "right" }}>
+                  <div style={{ textAlign: "right", flexShrink: 0 }}>
                     <p style={{ fontSize: "1.5rem", fontWeight: 800, color: "var(--text-primary)", lineHeight: 1, maxWidth: "none" }}>
                       {avg.toFixed(1)}
                     </p>
                     <p style={{ fontSize: "0.625rem", color: "var(--text-muted)", fontWeight: 500, maxWidth: "none" }}>
-                      средний
+                      {t("history.avgLabel")}
                     </p>
                   </div>
                 </div>
 
-                {/* Sector mini bars */}
                 <div style={{ padding: "12px 16px", display: "flex", gap: 4 }}>
                   {SECTORS.map((s) => {
                     const v = cycle.scores[s.id]?.value ?? 5;
                     return (
                       <div key={s.id} style={{ flex: 1, display: "flex", flexDirection: "column", alignItems: "center", gap: 4 }}>
-                        <div style={{ width: "100%", height: 36, background: "rgba(0,0,0,0.05)", borderRadius: 4, position: "relative", overflow: "hidden" }}>
+                        <div style={{ width: "100%", height: 36, background: "var(--border)", borderRadius: 4, position: "relative", overflow: "hidden" }}>
                           <motion.div
                             initial={{ height: 0 }}
                             whileInView={{ height: `${(v / 10) * 100}%` }}
@@ -212,6 +218,7 @@ export default function HistoryPage() {
                   })}
                 </div>
               </motion.div>
+              </Link>
             );
           })}
         </div>

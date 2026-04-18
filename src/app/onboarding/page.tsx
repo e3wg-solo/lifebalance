@@ -3,10 +3,14 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, ArrowLeft, Check } from "@phosphor-icons/react";
+import { ArrowRight, ArrowLeft, Check, Lightbulb } from "@phosphor-icons/react";
 import { useLifeBalanceStore } from "@/lib/store";
 import { SECTORS } from "@/lib/sectors";
 import type { OnboardingScores } from "@/lib/store";
+import { SectorIcon } from "@/components/icons/SectorIcon";
+import { useT } from "@/lib/i18n/useT";
+import { celebrate } from "@/lib/confetti";
+import { haptic } from "@/lib/haptics";
 
 const TOTAL = SECTORS.length;
 
@@ -21,6 +25,7 @@ function ScoreDots({
   colorDark: string;
   onChange: (v: number) => void;
 }) {
+  const { t } = useT();
   return (
     <div>
       <div style={{ display: "flex", gap: 6, alignItems: "flex-end", padding: "8px 0" }}>
@@ -31,11 +36,11 @@ function ScoreDots({
           return (
             <motion.button
               key={level}
-              onClick={() => onChange(level)}
+              onClick={() => { haptic("selection"); onChange(level); }}
               whileTap={{ scale: 0.85 }}
               whileHover={{ scale: 1.12, y: -2 }}
               transition={{ type: "spring", stiffness: 400, damping: 20 }}
-              aria-label={`Оценка ${level}`}
+              aria-label={`${level}`}
               style={{
                 flex: 1,
                 height: isCurrent ? 40 : active ? 30 : 18,
@@ -61,23 +66,28 @@ function ScoreDots({
           fontWeight: 500,
         }}
       >
-        <span>1 — Хуже некуда</span>
-        <span>10 — Идеально</span>
+        <span>{t("onboarding.minLabel")}</span>
+        <span>{t("onboarding.maxLabel")}</span>
       </div>
     </div>
   );
 }
 
-function getLevelLabel(v: number): string {
-  if (v <= 2) return "Критично";
-  if (v <= 4) return "Слабо";
-  if (v <= 6) return "Средне";
-  if (v <= 8) return "Хорошо";
-  return "Отлично";
+function useLevelLabel() {
+  const { t } = useT();
+  return (v: number): string => {
+    if (v <= 2) return t("scoreLabels.critical");
+    if (v <= 4) return t("scoreLabels.weak");
+    if (v <= 6) return t("scoreLabels.medium");
+    if (v <= 8) return t("scoreLabels.good");
+    return t("scoreLabels.excellent");
+  };
 }
 
 export default function OnboardingPage() {
   const router = useRouter();
+  const { t, lang } = useT();
+  const getLevelLabel = useLevelLabel();
   const { isAuthenticated, hasCompletedOnboarding, completeOnboarding } = useLifeBalanceStore();
 
   const [step, setStep] = useState(0);
@@ -100,6 +110,7 @@ export default function OnboardingPage() {
   const progress = (step / TOTAL) * 100;
 
   const handleNext = () => {
+    haptic("light");
     if (step < TOTAL - 1) {
       setStep((s) => s + 1);
     } else {
@@ -108,13 +119,16 @@ export default function OnboardingPage() {
   };
 
   const handleBack = () => {
+    haptic("light");
     if (step > 0) setStep((s) => s - 1);
   };
 
   const handleFinish = async () => {
     setSaving(true);
-    await new Promise((r) => setTimeout(r, 400));
-    completeOnboarding(scores);
+    await completeOnboarding(scores);
+    celebrate({ intensity: "full" });
+    // Let confetti play for a moment before navigating
+    await new Promise((r) => setTimeout(r, 600));
     router.push("/dashboard");
   };
 
@@ -169,7 +183,7 @@ export default function OnboardingPage() {
           maxWidth: 520,
           margin: "0 auto",
           width: "100%",
-          padding: "0 24px",
+          padding: "0 16px",
         }}
       >
         {/* Top bar */}
@@ -190,7 +204,7 @@ export default function OnboardingPage() {
                 maxWidth: "none",
               }}
             >
-              {step + 1} из {TOTAL}
+              {t("onboarding.stepOf", { step: step + 1, total: TOTAL })}
             </p>
             <p
               style={{
@@ -200,7 +214,7 @@ export default function OnboardingPage() {
                 maxWidth: "none",
               }}
             >
-              Первоначальная оценка
+              {t("onboarding.initialRating")}
             </p>
           </div>
 
@@ -237,37 +251,54 @@ export default function OnboardingPage() {
           >
             {/* Sector icon + label */}
             <div style={{ marginBottom: 32 }}>
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.05, type: "spring", stiffness: 300, damping: 20 }}
-                style={{
-                  width: 72,
-                  height: 72,
-                  borderRadius: 22,
-                  background: sector.color,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: 32,
-                  marginBottom: 20,
-                  boxShadow: `0 8px 24px ${sector.color}88`,
-                }}
-              >
-                {sector.emoji}
-              </motion.div>
+              {/* Icon and name side by side */}
+              <div style={{ display: "flex", alignItems: "center", gap: 16, marginBottom: 20 }}>
+                <motion.div
+                  initial={{ scale: 0.8, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: 0.05, type: "spring", stiffness: 300, damping: 20 }}
+                  style={{
+                    width: 72,
+                    height: 72,
+                    borderRadius: 22,
+                    background: sector.color,
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    flexShrink: 0,
+                    boxShadow: `0 8px 24px ${sector.color}88`,
+                  }}
+                >
+                  <SectorIcon sectorId={sector.id} size={36} color={sector.colorDark} />
+                </motion.div>
 
-              <h1
+                <h1
+                  style={{
+                    fontSize: "2rem",
+                    fontWeight: 900,
+                    color: "var(--text-primary)",
+                    letterSpacing: "-0.03em",
+                    lineHeight: 1.1,
+                    margin: 0,
+                  }}
+                >
+                  {t(`sectors.${sector.id}.label`)}
+                </h1>
+              </div>
+
+              <p
                 style={{
-                  fontSize: "2rem",
-                  fontWeight: 900,
+                  fontSize: "1rem",
+                  fontWeight: 700,
                   color: "var(--text-primary)",
                   marginBottom: 8,
-                  letterSpacing: "-0.03em",
+                  maxWidth: "none",
+                  letterSpacing: "-0.01em",
+                  lineHeight: 1.4,
                 }}
               >
-                {sector.labelRu}
-              </h1>
+                {t("onboarding.question", { sector: t(`sectors.${sector.id}.label`) })}
+              </p>
               <p
                 style={{
                   fontSize: "1rem",
@@ -276,7 +307,7 @@ export default function OnboardingPage() {
                   maxWidth: "none",
                 }}
               >
-                {sector.description}
+                {lang === "ru" ? sector.description : (sector.descriptionEn ?? sector.description)}
               </p>
             </div>
 
@@ -343,8 +374,12 @@ export default function OnboardingPage() {
                 borderRadius: 14,
                 borderLeft: `3px solid ${sector.colorDark}`,
                 marginBottom: 32,
+                display: "flex",
+                alignItems: "flex-start",
+                gap: 10,
               }}
             >
+              <Lightbulb size={16} weight="fill" color={sector.colorDark} style={{ marginTop: 2, flexShrink: 0 }} />
               <p
                 style={{
                   fontSize: "0.8125rem",
@@ -353,7 +388,7 @@ export default function OnboardingPage() {
                   maxWidth: "none",
                 }}
               >
-                💡 {sector.tips[0]}
+                {lang === "ru" ? sector.tips.ru[0] : sector.tips.en[0]}
               </p>
             </div>
           </motion.div>
@@ -374,7 +409,7 @@ export default function OnboardingPage() {
               whileTap={{ scale: 0.95 }}
               className="btn btn-ghost"
               style={{ flexShrink: 0, padding: "13px 16px" }}
-              aria-label="Назад"
+              aria-label={t("common.back")}
             >
               <ArrowLeft size={18} />
             </motion.button>
@@ -396,39 +431,39 @@ export default function OnboardingPage() {
             id={isLast ? "onboarding-finish" : `onboarding-next-${step}`}
           >
             {saving ? (
-              "Сохраняем..."
+              t("common.loading")
             ) : isLast ? (
               <>
-                Готово, показать колесо
+                {t("onboarding.finishBtn")}
                 <div
                   style={{
                     width: 28,
                     height: 28,
                     borderRadius: "50%",
-                    background: "rgba(255,255,255,0.15)",
+                    background: "rgba(128,128,128,0.2)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <Check size={14} weight="bold" color="white" />
+                  <Check size={14} weight="bold" color="currentColor" />
                 </div>
               </>
             ) : (
               <>
-                Далее
+                {t("onboarding.nextBtn")}
                 <div
                   style={{
                     width: 28,
                     height: 28,
                     borderRadius: "50%",
-                    background: "rgba(255,255,255,0.15)",
+                    background: "rgba(128,128,128,0.2)",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
                   }}
                 >
-                  <ArrowRight size={14} weight="bold" color="white" />
+                  <ArrowRight size={14} weight="bold" color="currentColor" />
                 </div>
               </>
             )}

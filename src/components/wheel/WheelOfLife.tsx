@@ -4,8 +4,11 @@ import { useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { SECTORS } from "@/lib/sectors";
 import type { SectorScore } from "@/types";
+import { useT } from "@/lib/i18n/useT";
 
-const SIZE = 340;
+// viewBox is wider than the wheel itself so long outer labels
+// (e.g. "Отношения", "Увлечения", "Путешествия") fit without clipping.
+const SIZE = 400;
 const CENTER = SIZE / 2;
 const MAX_RADIUS = 130;
 const MIN_RADIUS = 18;
@@ -42,13 +45,8 @@ function buildSectorPath(index: number, value: number): string {
   ].join(" ");
 }
 
-function buildGridRing(level: number): string {
-  const r = MIN_RADIUS + ((level - 1) / 9) * (MAX_RADIUS - MIN_RADIUS);
-  const points = Array.from({ length: SECTOR_COUNT }, (_, i) => {
-    const angle = i * ANGLE_STEP - Math.PI / 2;
-    return `${CENTER + r * Math.cos(angle)},${CENTER + r * Math.sin(angle)}`;
-  });
-  return points.join(" ");
+function gridRadius(level: number): number {
+  return MIN_RADIUS + ((level - 1) / 9) * (MAX_RADIUS - MIN_RADIUS);
 }
 
 interface WheelOfLifeProps {
@@ -65,6 +63,7 @@ export function WheelOfLife({
   interactive = true,
 }: WheelOfLifeProps) {
   const svgRef = useRef<SVGSVGElement>(null);
+  const { t, lang } = useT();
 
   const handleClick = useCallback(
     (id: string) => {
@@ -86,15 +85,17 @@ export function WheelOfLife({
         aria-label="Колесо жизненного баланса"
       >
         {/* Background circle */}
-        <circle cx={CENTER} cy={CENTER} r={MAX_RADIUS + 10} fill="rgba(0,0,0,0.03)" />
+        <circle cx={CENTER} cy={CENTER} r={MAX_RADIUS + 10} fill="var(--border)" />
 
-        {/* Grid rings */}
+        {/* Grid rings — true circles to match the curved sector paths */}
         {[2, 4, 6, 8, 10].map((level) => (
-          <polygon
+          <circle
             key={level}
-            points={buildGridRing(level)}
+            cx={CENTER}
+            cy={CENTER}
+            r={gridRadius(level)}
             fill="none"
-            stroke="rgba(0,0,0,0.07)"
+            stroke="var(--border-strong)"
             strokeWidth="1"
             strokeDasharray={level === 10 ? "none" : "3,3"}
           />
@@ -110,7 +111,7 @@ export function WheelOfLife({
               y1={CENTER + MIN_RADIUS * Math.sin(angle)}
               x2={CENTER + (MAX_RADIUS + 4) * Math.cos(angle)}
               y2={CENTER + (MAX_RADIUS + 4) * Math.sin(angle)}
-              stroke="rgba(0,0,0,0.06)"
+              stroke="var(--border)"
               strokeWidth="1"
             />
           );
@@ -184,19 +185,29 @@ export function WheelOfLife({
         {/* Center hub */}
         <circle cx={CENTER} cy={CENTER} r={MIN_RADIUS - 2} fill="var(--surface)" stroke="var(--border-strong)" strokeWidth="1.5" />
 
-        {/* Outer labels */}
+        {/* Outer labels — anchored per quadrant so long words don't overlap the wheel */}
         {SECTORS.map((sector, i) => {
           const midAngle = (i + 0.5) * ANGLE_STEP - Math.PI / 2;
-          const labelR = MAX_RADIUS + 22;
-          const lx = CENTER + labelR * Math.cos(midAngle);
-          const ly = CENTER + labelR * Math.sin(midAngle);
+          const labelR = MAX_RADIUS + 18;
+          const cos = Math.cos(midAngle);
+          const sin = Math.sin(midAngle);
+          const lx = CENTER + labelR * cos;
+          const ly = CENTER + labelR * sin;
+
+          // Horizontal anchor: near the vertical axis -> centered;
+          // right side -> start; left side -> end.
+          const textAnchor: "start" | "middle" | "end" =
+            Math.abs(cos) < 0.2 ? "middle" : cos > 0 ? "start" : "end";
+
+          // Vertical baseline: above center hangs down, below hangs up.
+          const dy = sin < -0.5 ? -2 : sin > 0.5 ? 10 : 4;
 
           return (
             <motion.text
               key={`outer-${sector.id}`}
               x={lx}
-              y={ly + 4}
-              textAnchor="middle"
+              y={ly + dy}
+              textAnchor={textAnchor}
               fontSize="10"
               fontWeight="600"
               fontFamily="Outfit, sans-serif"
@@ -206,7 +217,7 @@ export function WheelOfLife({
               transition={{ delay: i * 0.04 + 0.5 }}
               style={{ pointerEvents: "none", userSelect: "none" }}
             >
-              {sector.label}
+              {lang === "ru" ? sector.labelRu : sector.label}
             </motion.text>
           );
         })}

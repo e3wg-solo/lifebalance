@@ -1,15 +1,20 @@
 "use client";
 
+import { useState, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "@phosphor-icons/react";
 import type { SectorConfig } from "@/lib/sectors";
+import { getRotatingTips } from "@/lib/sectors";
 import type { SectorScore } from "@/types";
+import { SectorIcon } from "@/components/icons/SectorIcon";
 import { SectorSlider } from "./SectorSlider";
+import { useT } from "@/lib/i18n/useT";
 
 interface SectorDetailProps {
   sector: SectorConfig | null;
   score: SectorScore | null;
   historyValues?: { cycle: string; value: number }[];
+  cycleIndex?: number;
   onClose: () => void;
   onScoreChange: (sectorId: string, value: number) => void;
   onNoteChange?: (sectorId: string, note: string) => void;
@@ -19,11 +24,32 @@ export function SectorDetail({
   sector,
   score,
   historyValues = [],
+  cycleIndex = 0,
   onClose,
   onScoreChange,
   onNoteChange,
 }: SectorDetailProps) {
+  const { t, lang } = useT();
+  const [noteSaved, setNoteSaved] = useState(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const handleNoteChange = useCallback(
+    (sectorId: string, note: string) => {
+      if (onNoteChange) {
+        onNoteChange(sectorId, note);
+        if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = setTimeout(() => {
+          setNoteSaved(true);
+          setTimeout(() => setNoteSaved(false), 2000);
+        }, 400);
+      }
+    },
+    [onNoteChange]
+  );
+
   if (!sector || !score) return null;
+
+  const tips = getRotatingTips(sector, cycleIndex, lang, 3);
 
   return (
     <AnimatePresence>
@@ -69,15 +95,6 @@ export function SectorDetail({
             }}
           >
             {/* Handle */}
-            <div
-              style={{
-                width: 40,
-                height: 4,
-                background: "var(--border-strong)",
-                borderRadius: 2,
-                margin: "0 auto 24px",
-              }}
-            />
 
             {/* Header */}
             <div
@@ -98,10 +115,9 @@ export function SectorDetail({
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    fontSize: 24,
                   }}
                 >
-                  {sector.emoji}
+                  <SectorIcon sectorId={sector.id} size={28} color={sector.colorDark} />
                 </div>
                 <div>
                   <h2
@@ -112,7 +128,7 @@ export function SectorDetail({
                       lineHeight: 1.2,
                     }}
                   >
-                    {sector.labelRu}
+                    {t(`sectors.${sector.id}.label`)}
                   </h2>
                   <p
                     style={{
@@ -122,7 +138,7 @@ export function SectorDetail({
                       maxWidth: "none",
                     }}
                   >
-                    {sector.description}
+                    {lang === "ru" ? sector.description : (sector.descriptionEn ?? sector.description)}
                   </p>
                 </div>
               </div>
@@ -140,7 +156,7 @@ export function SectorDetail({
                   cursor: "pointer",
                   flexShrink: 0,
                 }}
-                aria-label="Закрыть"
+                aria-label={t("common.close")}
               >
                 <X size={16} weight="bold" color="var(--text-secondary)" />
               </button>
@@ -157,7 +173,7 @@ export function SectorDetail({
             >
               <SectorSlider
                 sectorId={sector.id}
-                label={sector.labelRu}
+                label={t(`sectors.${sector.id}.label`)}
                 color={sector.color}
                 colorDark={sector.colorDark}
                 emoji={sector.emoji}
@@ -169,23 +185,42 @@ export function SectorDetail({
             {/* Note input */}
             {onNoteChange && (
               <div style={{ marginBottom: 20 }}>
-                <label
-                  style={{
-                    display: "block",
-                    fontSize: "0.8125rem",
-                    fontWeight: 600,
-                    color: "var(--text-secondary)",
-                    marginBottom: 6,
-                  }}
-                >
-                  Заметка (необязательно)
-                </label>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 6 }}>
+                  <label
+                    style={{
+                      fontSize: "0.8125rem",
+                      fontWeight: 600,
+                      color: "var(--text-secondary)",
+                    }}
+                  >
+                    {t("sectorDetail.noteLabel")}
+                  </label>
+                  <AnimatePresence>
+                    {noteSaved && (
+                      <motion.span
+                        initial={{ opacity: 0, scale: 0.85 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0 }}
+                        style={{
+                          fontSize: "0.6875rem",
+                          fontWeight: 600,
+                          color: "var(--chip-green-text)",
+                          background: "var(--chip-green-bg)",
+                          padding: "2px 8px",
+                          borderRadius: 999,
+                        }}
+                      >
+                        {t("common.saved")}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                </div>
                 <textarea
                   className="input"
-                  placeholder="Что повлияло на эту оценку?"
+                  placeholder={t("sectorDetail.notePlaceholder")}
                   defaultValue={score.note ?? ""}
                   rows={2}
-                  onChange={(e) => onNoteChange(sector.id, e.target.value)}
+                  onChange={(e) => handleNoteChange(sector.id, e.target.value)}
                   style={{ resize: "none", lineHeight: 1.5 }}
                 />
               </div>
@@ -203,7 +238,7 @@ export function SectorDetail({
                     maxWidth: "none",
                   }}
                 >
-                  История
+                  {t("sectorDetail.historyLabel")}
                 </p>
                 <div style={{ display: "flex", alignItems: "flex-end", gap: 6, height: 48 }}>
                   {historyValues.slice(-8).map((h, i) => (
@@ -236,10 +271,10 @@ export function SectorDetail({
                   maxWidth: "none",
                 }}
               >
-                Советы
+                {t("sectorDetail.tipsLabel")}
               </p>
               <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                {sector.tips.map((tip, i) => (
+                {tips.map((tip, i) => (
                   <motion.div
                     key={i}
                     initial={{ opacity: 0, x: -8 }}
